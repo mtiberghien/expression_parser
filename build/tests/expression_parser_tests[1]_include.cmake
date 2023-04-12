@@ -1,0 +1,5 @@
+if(EXISTS "/home/mathias/Documents/dev/cpp/expression_parser/build/tests/expression_parser_tests[1]_tests.cmake")
+  include("/home/mathias/Documents/dev/cpp/expression_parser/build/tests/expression_parser_tests[1]_tests.cmake")
+else()
+  add_test(expression_parser_tests_NOT_BUILT expression_parser_tests_NOT_BUILT)
+endif()
