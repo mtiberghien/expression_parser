@@ -21,11 +21,13 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
     Validation_Result result;
     try
     {
+        // Empty or white space
         if(is_whitespace_or_empty(expr))
         {
             throw invalid_argument("Expression should not be empty");
         }
 
+        // Unbalanced parenthesis
         int nb_open_parenthesis = count_if(begin(expr), end(expr), [](const char c){return c == '(';});
         int nb_close_parenthesis = count_if(begin(expr), end(expr), [](const char c){return c == ')';});
 
@@ -36,6 +38,7 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
             throw invalid_argument(s.str());
         }
 
+        // Supported operators
         string supportedOperators = this->getValidOperators();
         auto invalid_it = find_if_not(begin(expr), end(expr), [supportedOperators](const char c){ return isspace(c) || isdigit(c) || (supportedOperators.find_first_of(c) != string::npos);});
         if(invalid_it != expr.end())
@@ -45,6 +48,7 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
             throw invalid_argument(message.str());
         }
 
+        // Expression should be separated by operators
         stringstream splitters;
         splitters << "[\\s()]+";
         regex re(splitters.str());
@@ -66,8 +70,8 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
             }
             s_ops << "]";
             string r_ops = s_ops.str();
-            regex end_with_operation("^[\\w" + supportedOperators+ "]*"+r_ops+"$");
-            regex start_with_operation("^" + r_ops+"[\\w" + supportedOperators+ "]*$");
+            regex end_with_operation("^[\\d" + supportedOperators+ "]*"+r_ops+"$");
+            regex start_with_operation("^" + r_ops+"[\\d" + supportedOperators+ "]*$");
             bool check_operator = false;
             for(const auto& word: tokens)
             {

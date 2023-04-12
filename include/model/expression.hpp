@@ -30,8 +30,10 @@ class Operation_Expression: public Expression
 {
     protected:
         string id;
+        int priority{0};
     public:
-        Operation_Expression(const string& id): id(id){}
+        Operation_Expression(const string& id, int priority=0): id(id), priority(priority){}
+        bool operator <(const Operation_Expression& other){return this->priority < other.priority;}
         virtual void add_member(unique_ptr<Expression>&& expr) = 0;
         virtual bool can_add_member() = 0;
 };
@@ -42,7 +44,7 @@ class Binary_Operation_Expression: public Operation_Expression
     unique_ptr<Expression> left_member{nullptr};
     unique_ptr<Expression> right_member{nullptr};
     public:
-        Binary_Operation_Expression(const string& id): Operation_Expression(id){}
+        Binary_Operation_Expression(const string& id, int priority=0): Operation_Expression(id, priority){}
         bool can_add_member() override {return !(left_member && right_member);}
         void add_member(unique_ptr<Expression>&& expr) override {
             if(left_member)
@@ -75,6 +77,6 @@ class Substraction_Expression: public Binary_Operation_Expression
 class Multiplication_Expression: public Binary_Operation_Expression
 {
     public:
-        Multiplication_Expression(): Binary_Operation_Expression("*"){}
+        Multiplication_Expression(): Binary_Operation_Expression("*", 1){}
         int evaluate() const override;
 };
