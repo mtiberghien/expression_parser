@@ -6,6 +6,7 @@ Expression_Parser::Expression_Parser()
     operations.insert({"-", [](){return make_unique<Substraction_Expression>();}});
     operations.insert({"*", [](){return make_unique<Multiplication_Expression>();}});
     operations.insert({"/", [](){return make_unique<Division_Expression>();}});
+    operations.insert({"%", [](){return make_unique<Modulo_Expression>();}});
     operations.insert({"^", [](){return make_unique<Exp_Expression>();}});
 }
 

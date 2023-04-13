@@ -51,3 +51,13 @@ int Exp_Expression::evaluate() const
     }
     return 0;
 }
+
+int Modulo_Expression::evaluate() const
+{
+    if(left_member && right_member)
+    {
+         int div = right_member->evaluate();
+        return left_member->evaluate()% (div == 0 ? 1 : div);
+    }
+    return 0;
+}

@@ -96,3 +96,10 @@ class Exp_Expression: public Binary_Operation_Expression
         Exp_Expression(): Binary_Operation_Expression("^", 2){}
         int evaluate() const override;
 };
+
+class Modulo_Expression: public Binary_Operation_Expression
+{
+    public:
+        Modulo_Expression(): Binary_Operation_Expression("%", 1){}
+        int evaluate() const override;
+};
