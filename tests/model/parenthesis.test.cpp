@@ -22,7 +22,25 @@ TEST(parenthesis, parse_par_minus_3_plus_2_par_minus_par_plus_par_3_minus_2_par)
 TEST(parenthesis, parse_par_minus_3_plus_4_minus_par_5_plus_2_par)
 {
     Expression_Parser parser;
-    auto result = parser.parse("3+4-(5+2)");
+    const auto result = parser.parse("3+4-(5+2)");
     ASSERT_TRUE(result.expression);
     EXPECT_EQ(3+4-(5+2), result.expression->evaluate());
 }
+
+TEST(parenthesis, parse_par_3_plus_5_par_mult_par_5_minus_3_par)
+{
+    Expression_Parser parser;
+    const auto result = parser.parse("(3+5)*(5-3)");
+    ASSERT_TRUE(result.expression);
+    EXPECT_EQ((3+5)*(5-3), result.expression->evaluate());
+}
+
+TEST(parenthesis, parse_1_plus_2_mult_par_3_minus_2_par_mult_6)
+{
+    Expression_Parser parser;
+    EXPECT_EQ(1+2*(3-2)*6, parser.parse("1+2*(3-2)*6").expression->evaluate());
+}
+
+
+
+

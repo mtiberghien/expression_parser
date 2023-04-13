@@ -1,11 +1,11 @@
 #include "parser.hpp"
-#include<iostream>
 
 Expression_Parser::Expression_Parser()
 {
     operations.insert({"+", [](){return make_unique<Addition_Expression>();}});
     operations.insert({"-", [](){return make_unique<Substraction_Expression>();}});
     operations.insert({"*", [](){return make_unique<Multiplication_Expression>();}});
+    operations.insert({"/", [](){return make_unique<Division_Expression>();}});
 }
 
 void add_member(unique_ptr<Operation_Expression>& expr, unique_ptr<Expression>& member)
@@ -63,10 +63,6 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
             for(int i=0;i<ops.size();i++)
             {
                 s_ops << ops[i];
-                if(i<ops.size()-1)
-                {
-                    s_ops << "|";
-                }
             }
             s_ops << "]";
             string r_ops = s_ops.str();
@@ -119,9 +115,9 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
 {
     Parse_Result result;
     ostringstream word{""s};
-    unique_ptr<Operation_Expression> prev{nullptr};
     unique_ptr<Operation_Expression> current{nullptr};
     unique_ptr<Expression> member{nullptr};
+    stack<unique_ptr<Operation_Expression>> ops;
     char c;
     try
     {
@@ -152,21 +148,35 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
                 member = make_unique<Constant_Expression>(constant);
             }
             word.str("");
-            if(current)
-            {
-                prev = move(current);
-                add_member(prev, member);          
-            }
             current = operations[id]();
-            if(prev)
+            if(!ops.empty())
             {
-                current->add_member(move(prev));
-                prev = nullptr;
+                if(*ops.top() < *current)
+                {
+                    add_member(current, member);
+                }
+                else
+                {
+                    add_member(ops.top(), member);
+                    if(*current < *ops.top())
+                    {
+                        while(ops.size()>1)
+                        {
+                            member = move(ops.top());
+                            ops.pop();
+                            add_member(ops.top(), member);
+                        }
+                    }
+                    member = move(ops.top());
+                    add_member(current, member);
+                    ops.pop(); 
+                }
             }
             else
             {
                 add_member(current, member);
             }
+            ops.push(move(current));
         }
         else
         {
@@ -186,10 +196,17 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
     }
     
     
-    if(current)
+    if(!ops.empty())
     {
-        add_member(current, member);
-        result.expression = move(current);
+        add_member(ops.top(), member);   
+        while(ops.size()>1)
+        {
+            member = move(ops.top());
+            ops.pop();
+            add_member(ops.top(), member);
+        }
+        result.expression = move(ops.top());
+        ops.pop();
     }
     else
     {

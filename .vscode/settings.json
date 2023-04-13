@@ -75,7 +75,7 @@
     },
     "cmake.debugConfig": {
         "args": [
-            "--gtest_filter=combined.parse_3_plus_5_mult_3"
+            "--gtest_filter=*"
         ]
     }
 }

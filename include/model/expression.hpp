@@ -34,6 +34,7 @@ class Operation_Expression: public Expression
     public:
         Operation_Expression(const string& id, int priority=0): id(id), priority(priority){}
         bool operator <(const Operation_Expression& other){return this->priority < other.priority;}
+        bool operator ==(const Operation_Expression& other){return this->priority == other.priority;}
         virtual void add_member(unique_ptr<Expression>&& expr) = 0;
         virtual bool can_add_member() = 0;
 };
@@ -78,5 +79,12 @@ class Multiplication_Expression: public Binary_Operation_Expression
 {
     public:
         Multiplication_Expression(): Binary_Operation_Expression("*", 1){}
+        int evaluate() const override;
+};
+
+class Division_Expression: public Binary_Operation_Expression
+{
+    public:
+        Division_Expression(): Binary_Operation_Expression("/", 1){}
         int evaluate() const override;
 };

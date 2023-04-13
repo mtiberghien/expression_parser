@@ -9,9 +9,10 @@ int main()
 {
     Expression_Parser parser;
     cout << "Mathematical expression parser" << endl;
-    cout << "Supported opérators: ";
+    cout << "Supported operators: ";
     vector<string> ops = parser.getSupportedOperators();
     for_each(begin(ops), end(ops), [i=0,size=ops.size()](const string& s) mutable {cout << s << (++i < size ? ", " : "\n");});
+    cout << "Group separators: ()" << endl;
     string expression;
     while(expression!="q")
     {

@@ -17,7 +17,8 @@ add_executable(${test_app_name} model/addition.test.cpp
   model/substraction.test.cpp
   model/combined.test.cpp
   model/parenthesis.test.cpp
-  model/multiplication.test.cpp)
+  model/multiplication.test.cpp
+  model/division.test.cpp)
 
 target_link_libraries(${test_app_name} PUBLIC model misc GTest::gtest_main)
 
