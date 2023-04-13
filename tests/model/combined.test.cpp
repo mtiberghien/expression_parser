@@ -31,3 +31,15 @@ TEST(combined, parse_3_minus_5_mult_3_plus_2)
     EXPECT_EQ(3-5*3+2, parser.parse("3-5*3+2").expression->evaluate());
 }
 
+TEST(combined, parse_1_plus_2_mult_3_exp_2)
+{
+    Expression_Parser parser;
+    EXPECT_EQ(1+2*pow(3,2), parser.parse("1+2*3^2").expression->evaluate());
+}
+
+TEST(combined, parse_1_plus_2_mult_3_exp_2_minus_3_mult_4)
+{
+    Expression_Parser parser;
+    EXPECT_EQ(1+2*pow(3,2)-3*4, parser.parse("1+2*3^2-3*4").expression->evaluate());
+}
+

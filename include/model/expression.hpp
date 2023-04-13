@@ -4,6 +4,7 @@
 #include <sstream>
 #include <memory>
 #include "utils.hpp"
+#include <cmath>
 
 
 using namespace std;
@@ -86,5 +87,12 @@ class Division_Expression: public Binary_Operation_Expression
 {
     public:
         Division_Expression(): Binary_Operation_Expression("/", 1){}
+        int evaluate() const override;
+};
+
+class Exp_Expression: public Binary_Operation_Expression
+{
+    public:
+        Exp_Expression(): Binary_Operation_Expression("^", 2){}
         int evaluate() const override;
 };

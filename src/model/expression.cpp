@@ -42,3 +42,12 @@ int Division_Expression::evaluate() const
     }
     return 0;
 }
+
+int Exp_Expression::evaluate() const
+{
+    if(left_member && right_member)
+    {
+        return pow(left_member->evaluate(), right_member->evaluate());
+    }
+    return 0;
+}
