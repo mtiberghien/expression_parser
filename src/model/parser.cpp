@@ -8,9 +8,12 @@ Expression_Parser::Expression_Parser()
     operation_factory.insert({"/", [](){return make_unique<Division_Expression>();}});
     operation_factory.insert({"%", [](){return make_unique<Modulo_Expression>();}});
     operation_factory.insert({"^", [](){return make_unique<Exp_Expression>();}});
-    operation_factory.insert({"==", [](){return make_unique<Equality_Expression>();}});
+    operation_factory.insert({"==", [](){return make_unique<Equals_Expression>();}});
     operation_factory.insert({"<", [](){return make_unique<LessThan_Expression>();}});
     operation_factory.insert({"<=", [](){return make_unique<LessThanEqual_Expression>();}});
+    operation_factory.insert({">", [](){return make_unique<GreaterThan_Expression>();}});
+    operation_factory.insert({">=", [](){return make_unique<GreaterThanEqual_Expression>();}});
+    operation_factory.insert({"!=", [](){return make_unique<NotEquals_Expression>();}});
 }
 
 void add_member(unique_ptr<Operation_Expression>& expr, unique_ptr<Expression>& member)

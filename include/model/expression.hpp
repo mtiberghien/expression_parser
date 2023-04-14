@@ -108,10 +108,17 @@ class Modulo_Expression: public Binary_Operation_Expression
         long evaluate() const override;
 };
 
-class Equality_Expression: public Binary_Operation_Expression
+class Equals_Expression: public Binary_Operation_Expression
 {
     public:
-        Equality_Expression(): Binary_Operation_Expression("==", -2){}
+        Equals_Expression(): Binary_Operation_Expression("==", -2){}
+        long evaluate() const override;
+};
+
+class NotEquals_Expression: public Binary_Operation_Expression
+{
+    public:
+        NotEquals_Expression(): Binary_Operation_Expression("!=", -2){}
         long evaluate() const override;
 };
 
@@ -126,5 +133,19 @@ class LessThanEqual_Expression: public Binary_Operation_Expression
 {
     public:
         LessThanEqual_Expression(): Binary_Operation_Expression("<=", -1){}
+        long evaluate() const override;
+};
+
+class GreaterThan_Expression: public Binary_Operation_Expression
+{
+    public:
+        GreaterThan_Expression(): Binary_Operation_Expression(">", -1){}
+        long evaluate() const override;
+};
+
+class GreaterThanEqual_Expression: public Binary_Operation_Expression
+{
+    public:
+        GreaterThanEqual_Expression(): Binary_Operation_Expression(">=", -1){}
         long evaluate() const override;
 };

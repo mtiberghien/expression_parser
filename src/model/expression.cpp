@@ -62,11 +62,20 @@ long Modulo_Expression::evaluate() const
     return 0;
 }
 
-long Equality_Expression::evaluate() const
+long Equals_Expression::evaluate() const
 {
     if(left_member && right_member)
     {
         return left_member->evaluate() == right_member->evaluate();
+    }
+    return 0;
+}
+
+long NotEquals_Expression::evaluate() const
+{
+    if(left_member && right_member)
+    {
+        return left_member->evaluate() != right_member->evaluate();
     }
     return 0;
 }
@@ -85,6 +94,24 @@ long LessThanEqual_Expression::evaluate() const
     if(left_member && right_member)
     {
         return left_member->evaluate() <= right_member->evaluate();
+    }
+    return 0;
+}
+
+long GreaterThan_Expression::evaluate() const
+{
+    if(left_member && right_member)
+    {
+        return left_member->evaluate() > right_member->evaluate();
+    }
+    return 0;
+}
+
+long GreaterThanEqual_Expression::evaluate() const
+{
+    if(left_member && right_member)
+    {
+        return left_member->evaluate() >= right_member->evaluate();
     }
     return 0;
 }
