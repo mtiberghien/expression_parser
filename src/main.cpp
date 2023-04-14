@@ -23,7 +23,7 @@ int main()
             auto parse_result = parser.parse(expression);
             if(parse_result)
             {
-                int result = parse_result.expression->evaluate();
+                long result = parse_result.expression->evaluate();
                 cout << parse_result.expression->to_string() << endl;
                 cout << expression << " = " << result << endl;
             }

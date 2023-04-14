@@ -20,7 +20,9 @@ add_executable(${test_app_name} model/addition.test.cpp
   model/multiplication.test.cpp
   model/division.test.cpp
   model/exp.test.cpp
-  model/modulo.test.cpp)
+  model/modulo.test.cpp
+  model/equals.test.cpp
+  model/lessthan.test.cpp)
 
 target_link_libraries(${test_app_name} PUBLIC model misc GTest::gtest_main)
 

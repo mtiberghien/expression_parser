@@ -12,7 +12,7 @@ using namespace std;
 class Expression
 {
     public:
-        virtual int evaluate() const = 0;
+        virtual long evaluate() const = 0;
         virtual string to_string() const = 0;
 };
 
@@ -23,7 +23,7 @@ class Constant_Expression: public Expression
     public:
         Constant_Expression(const string& value): value(value){}
         Constant_Expression(string&& value): value(move(value)){}
-        int evaluate() const override;
+        long evaluate() const override;
         string to_string() const override {return value;}
 };
 
@@ -38,6 +38,7 @@ class Operation_Expression: public Expression
         bool operator ==(const Operation_Expression& other){return this->priority == other.priority;}
         virtual void add_member(unique_ptr<Expression>&& expr) = 0;
         virtual bool can_add_member() = 0;
+        virtual string get_reg_id() const {return id;};
 };
 
 class Binary_Operation_Expression: public Operation_Expression
@@ -66,40 +67,64 @@ class Addition_Expression: public Binary_Operation_Expression
 {
     public:
         Addition_Expression(): Binary_Operation_Expression("+"){}
-        int evaluate() const override;
+        long evaluate() const override;
+        string get_reg_id() const override {return "\\"+id;}
 };
 
 class Substraction_Expression: public Binary_Operation_Expression
 {
     public:
         Substraction_Expression(): Binary_Operation_Expression("-"){}
-        int evaluate() const override;
+        long evaluate() const override;
 };
 
 class Multiplication_Expression: public Binary_Operation_Expression
 {
     public:
         Multiplication_Expression(): Binary_Operation_Expression("*", 1){}
-        int evaluate() const override;
+        long evaluate() const override;
+        string get_reg_id() const override {return "\\"+id;}
 };
 
 class Division_Expression: public Binary_Operation_Expression
 {
     public:
         Division_Expression(): Binary_Operation_Expression("/", 1){}
-        int evaluate() const override;
+        long evaluate() const override;
 };
 
 class Exp_Expression: public Binary_Operation_Expression
 {
     public:
         Exp_Expression(): Binary_Operation_Expression("^", 2){}
-        int evaluate() const override;
+        long evaluate() const override;
+        string get_reg_id() const override {return "\\"+id;}
 };
 
 class Modulo_Expression: public Binary_Operation_Expression
 {
     public:
         Modulo_Expression(): Binary_Operation_Expression("%", 1){}
-        int evaluate() const override;
+        long evaluate() const override;
+};
+
+class Equality_Expression: public Binary_Operation_Expression
+{
+    public:
+        Equality_Expression(): Binary_Operation_Expression("==", -2){}
+        long evaluate() const override;
+};
+
+class LessThan_Expression: public Binary_Operation_Expression
+{
+    public:
+        LessThan_Expression(): Binary_Operation_Expression("<", -1){}
+        long evaluate() const override;
+};
+
+class LessThanEqual_Expression: public Binary_Operation_Expression
+{
+    public:
+        LessThanEqual_Expression(): Binary_Operation_Expression("<=", -1){}
+        long evaluate() const override;
 };

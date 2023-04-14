@@ -43,3 +43,15 @@ TEST(combined, parse_1_plus_2_mult_3_exp_2_minus_3_mult_4)
     EXPECT_EQ(1+2*pow(3,2)-3*4, parser.parse("1+2*3^2-3*4").expression->evaluate());
 }
 
+TEST(combined, parse_1_plus_3_less_5)
+{
+    Expression_Parser parser;
+    EXPECT_EQ(1+3<5, parser.parse("1+3<5").expression->evaluate());
+}
+
+TEST(combined, parse_2_plus_4_less_10_minus_2_equal_5_less_8)
+{
+    Expression_Parser parser;
+    EXPECT_EQ(2+4<10-2==5<8, parser.parse("2+4<10-2==5<8").expression->evaluate());
+}
+

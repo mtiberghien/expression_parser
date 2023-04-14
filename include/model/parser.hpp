@@ -17,23 +17,25 @@ struct Validation_Result
 {
     bool is_valid{true};
     string message{""};
-    operator bool(){return is_valid;}
+    operator bool() const {return is_valid;}
 };
 
 struct Parse_Result
 {
     unique_ptr<Expression> expression{nullptr};
     string error_message{""};
-    operator bool(){if(expression){return true;} return false;};
+    operator bool() const {if(expression){return true;} return false;};
 };
 
 class Expression_Parser
 {
     private:
-        map<string, function<unique_ptr<Operation_Expression>()>> operations;
+        map<string, function<unique_ptr<Operation_Expression>()>> operation_factory;
         const Validation_Result validate(const string& expression) noexcept;
-        string getValidOperators();
+        string getValidOperatorsString();
+        bool is_operation_id(vector<string>& supported_operators, istringstream& stream, string& first_char);
         const Parse_Result parse(istringstream& stream) noexcept;
+        vector<string> getSupportedOperatorsReg();
     public:
         Expression_Parser();
         vector<string> getSupportedOperators();
