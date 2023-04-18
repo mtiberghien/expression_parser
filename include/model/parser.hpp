@@ -10,6 +10,7 @@
 #include <regex>
 #include <iostream>
 #include <queue>
+#include "data_context.hpp"
 
 using namespace std;
 
@@ -30,6 +31,7 @@ struct Parse_Result
 class Expression_Parser
 {
     private:
+        unique_ptr<DataContext> data;
         map<string, function<unique_ptr<Operation_Expression>()>> operation_factory;
         const Validation_Result validate(const string& expression) noexcept;
         string getValidOperatorsString();
@@ -37,7 +39,7 @@ class Expression_Parser
         const Parse_Result parse(istringstream& stream) noexcept;
         vector<string> getSupportedOperatorsReg();
     public:
-        Expression_Parser();
+        Expression_Parser(unique_ptr<DataContext> data=nullptr);
         vector<string> getSupportedOperators();
         const Parse_Result parse(const string& expression_string) noexcept;
 };

@@ -115,3 +115,21 @@ long GreaterThanEqual_Expression::evaluate() const
     }
     return 0;
 }
+
+long And_Expression::evaluate() const
+{
+    if(left_member && right_member)
+    {
+        return left_member->evaluate() && right_member->evaluate();
+    }
+    return 0;
+}
+
+long Or_Expression::evaluate() const
+{
+    if(left_member && right_member)
+    {
+        return left_member->evaluate() || right_member->evaluate();
+    }
+    return 0;
+}

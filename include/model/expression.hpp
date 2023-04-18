@@ -149,3 +149,17 @@ class GreaterThanEqual_Expression: public Binary_Operation_Expression
         GreaterThanEqual_Expression(): Binary_Operation_Expression(">=", -1){}
         long evaluate() const override;
 };
+
+class And_Expression: public Binary_Operation_Expression
+{
+    public:
+        And_Expression(): Binary_Operation_Expression("and", -3){}
+        long evaluate() const override;
+};
+
+class Or_Expression: public Binary_Operation_Expression
+{
+    public:
+        Or_Expression(): Binary_Operation_Expression("or", -2){}
+        long evaluate() const override;
+};

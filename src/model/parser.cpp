@@ -1,6 +1,6 @@
 #include "parser.hpp"
 
-Expression_Parser::Expression_Parser()
+Expression_Parser::Expression_Parser(unique_ptr<DataContext> data): data(move(data))
 {
     operation_factory.insert({"+", [](){return make_unique<Addition_Expression>();}});
     operation_factory.insert({"-", [](){return make_unique<Substraction_Expression>();}});
@@ -14,6 +14,8 @@ Expression_Parser::Expression_Parser()
     operation_factory.insert({">", [](){return make_unique<GreaterThan_Expression>();}});
     operation_factory.insert({">=", [](){return make_unique<GreaterThanEqual_Expression>();}});
     operation_factory.insert({"!=", [](){return make_unique<NotEquals_Expression>();}});
+    operation_factory.insert({"and", [](){return make_unique<And_Expression>();}});
+    operation_factory.insert({"or", [](){return make_unique<Or_Expression>();}});
 }
 
 void add_member(unique_ptr<Operation_Expression>& expr, unique_ptr<Expression>& member)
@@ -66,7 +68,7 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
         }
         s_ops << ")";
         string r_ops = s_ops.str();
-        string digits = regex_replace(expr, regex(r_ops), "");
+        string digits = regex_replace(expr, regex(r_ops, regex_constants::icase), "");
         auto invalid_it = find_if_not(begin(digits), end(digits), [](const char c){return isdigit(c);});
         if(invalid_it != digits.end())
         {
@@ -84,8 +86,8 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
         tokens.erase(remove_if(begin(tokens),end(tokens), is_whitespace_or_empty), end(tokens));
         if(tokens.size()>1)
         {
-            regex end_with_operation("^[\\d" + supportedOperators+ "]*"+r_ops+"$");
-            regex start_with_operation("^" + r_ops+"[\\d" + supportedOperators+ "]*$");
+            regex end_with_operation("^[\\d" + supportedOperators+ "]*"+r_ops+"$", regex_constants::icase);
+            regex start_with_operation("^" + r_ops+"[\\d" + supportedOperators+ "]*$", regex_constants::icase);
             bool check_operator = false;
             for(const auto& word: tokens)
             {
@@ -150,10 +152,15 @@ void unstack_operations(stack<unique_ptr<Operation_Expression>>& ops)
     }
 }
 
+char safe_to_lower(char c)
+{
+    return static_cast<char>(tolower(static_cast<unsigned char>(c)));
+}
+
 bool Expression_Parser::is_operation_id(vector<string>& supported_operators, istringstream& stream, string& first_char)
 {
     vector<string> match_ops;
-    copy_if(begin(supported_operators), end(supported_operators), back_insert_iterator(match_ops), [&first_char](const string& id){return id[0]==first_char[0];});
+    copy_if(begin(supported_operators), end(supported_operators), back_insert_iterator(match_ops), [&first_char](const string& id){return safe_to_lower(id[0])==safe_to_lower(first_char[0]);});
     //No match means not an operator
     if(match_ops.size()==0)
     {
@@ -170,13 +177,13 @@ bool Expression_Parser::is_operation_id(vector<string>& supported_operators, ist
         else
         {
             stringstream ids;
-            ids << first_char;
+            ids << safe_to_lower(first_char[0]);
             int i=1;
             for(i;i<id_size;i++)
             {
                 char c;
                 stream.get(c);
-                ids << c;
+                ids << safe_to_lower(c);
             }
             string id = ids.str();
             if(id == match_ops[0])
@@ -234,63 +241,85 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
     try
     {
         while(s.get(c))
-    {
-        if(c==')')break;
-        if(c=='(')
         {
-            auto p = parse(s);
-            if(p)
+            if(isspace(c)) continue;
+            // Return if end of group
+            if(c==')')break;
+            // Parse recursively if start of group
+            if(c=='(')
             {
-                member = move(p.expression);
-            }
-            else
-            {
-                result.error_message = p.error_message;
-                return result;
-            }
-            
-            continue;
-        }
-        string id{c};
-        //TODO check for id has to support ids with multiple characters like ==
-        if(is_operation_id(supportedOperators, s, id))
-        {
-            string constant = word.str();
-            if(!member)
-            {
-                member = make_unique<Constant_Expression>(constant);
-            }
-            word.str("");
-            current = operation_factory[id]();
-            if(!ops.empty())
-            {
-                if(*ops.top() < *current)
+                auto p = parse(s);
+                // If conversion suceed store as a member
+                if(p)
                 {
-                    add_member(current, member);
+                    member = move(p.expression);
+                }
+                // Else return error message
+                else
+                {
+                    result.error_message = p.error_message;
+                    return result;
+                }
+                // When a group is parsed we just need to read the next character
+                continue;
+            }
+            string id{c};
+            // Check if the character is an operator or the first character of an operator
+            // Note that the id will contain the full id of the operation if succeed
+            if(is_operation_id(supportedOperators, s, id))
+            {
+                // If member is not defined make member as constant expression
+                string constant = word.str();
+                if(!member)
+                {
+                    member = make_unique<Constant_Expression>(constant);
+                }
+                // Word is cleared
+                word.str("");
+                //Create the operation expression according to the id
+                current = operation_factory[id]();
+                //If there is another operation in the stack
+                if(!ops.empty())
+                {
+                    //If new operator has a greater priority than previous
+                    if(*ops.top() < *current)
+                    {
+                        // Member is added to the current operator
+                        add_member(current, member);
+                    }
+                    else
+                    {
+                        // Member is added  to previous operator
+                        add_member(ops.top(), member);
+                        // If new operator has lower priority previous members can be merged
+                        if(*current < *ops.top())
+                        {
+                            //All operations are merged from right to left
+                            //There oldest operation will remain in the stack
+                            unstack_operations(ops);
+                        }
+                        // There is one (after unstack) or more operations
+                        member = move(ops.top());
+                        // Previous operation is merged to the current
+                        add_member(current, member);
+                        ops.pop(); 
+                    }
                 }
                 else
                 {
-                    add_member(ops.top(), member);
-                    if(*current < *ops.top())
-                    {
-                        unstack_operations(ops);
-                    }
-                    member = move(ops.top());
+                    // Member is added to current operation
                     add_member(current, member);
-                    ops.pop(); 
                 }
+                // Current operation is added to the stack
+                ops.push(move(current));
             }
             else
             {
-                add_member(current, member);
+                // If c is not an operato the word stream accumulates it
+                word << c;
             }
-            ops.push(move(current));
         }
-        else
-        {
-            word << c;
-        }
-    }
+        // At the end of the stream one last member shoud remain.
         string constant = word.str();
         if(!member)
         {
@@ -303,16 +332,20 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
         return result;
     }
     
-    
+    // If the stack of operation is not empty, remainins operations should be merged from right to left
     if(!ops.empty())
     {
-        add_member(ops.top(), member);   
+        //Last member is added to last operation
+        add_member(ops.top(), member);
+        // Previous operations are merged   
         unstack_operations(ops);
+        // The result contains the top operation
         result.expression = move(ops.top());
         ops.pop();
     }
     else
     {
+        //In case no operators the expression is a group or a constant
         result.expression = move(member);
     }
     return result;
