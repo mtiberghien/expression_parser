@@ -16,13 +16,18 @@ Expression_Parser::Expression_Parser()
     operation_factory.insert({"!=", [](){return make_unique<NotEquals_Expression>();}});
     operation_factory.insert({"and", [](){return make_unique<And_Expression>();}});
     operation_factory.insert({"or", [](){return make_unique<Or_Expression>();}});
+    operation_factory.insert({"!", [](){return make_unique<Not_Expression>();}});
 }
 
-void add_member(unique_ptr<Operation_Expression>& expr, unique_ptr<Expression>& member)
+void add_member(unique_ptr<Operation_Expression>& expr, unique_ptr<Expression>& member, bool is_left_member)
 {
-    if(expr->can_add_member())
+    if(expr->can_add_member() && (!is_left_member || expr->has_left_member()))
     {
         expr->add_member(move(member));
+    }
+    else
+    {
+        member = nullptr;
     }
 }
 
@@ -137,7 +142,7 @@ void unstack_operations(stack<unique_ptr<Operation_Expression>>& ops)
     {
         member = move(ops.top());
         ops.pop();
-        add_member(ops.top(), member);
+        add_member(ops.top(), member, false);
     }
 }
 
@@ -302,12 +307,12 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
                     if(*ops.top() < *current)
                     {
                         // Member is added to the current operator
-                        add_member(current, member);
+                        add_member(current, member, true);
                     }
                     else
                     {
                         // Member is added  to previous operator
-                        add_member(ops.top(), member);
+                        add_member(ops.top(), member, false);
                         // If new operator has lower priority previous members can be merged
                         if(*current < *ops.top())
                         {
@@ -318,14 +323,14 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
                         // There is one (after unstack) or more operations
                         member = move(ops.top());
                         // Previous operation is merged to the current
-                        add_member(current, member);
+                        add_member(current, member, true);
                         ops.pop(); 
                     }
                 }
                 else
                 {
                     // Member is added to current operation
-                    add_member(current, member);
+                    add_member(current, member, true);
                 }
                 // Current operation is added to the stack
                 ops.push(move(current));
@@ -353,7 +358,7 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
     if(!ops.empty())
     {
         //Last member is added to last operation
-        add_member(ops.top(), member);
+        add_member(ops.top(), member, false);
         // Previous operations are merged   
         unstack_operations(ops);
         // The result contains the top operation

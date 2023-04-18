@@ -21,7 +21,7 @@ long Substraction_Expression::evaluate(const DataContext* dc) const
 long Constant_Expression::evaluate(const DataContext* dc) const
 {
     if(is_whitespace_or_empty(this->value)) return 0;
-    return stoi(this->value);
+    return stol(this->value);
 }
 
 long Multiplication_Expression::evaluate(const DataContext* dc) const
@@ -139,6 +139,15 @@ long Reference_Expression::evaluate(const DataContext* dc) const
     if(dc->exists(reference))
     {
         return dc->evaluate(reference);
+    }
+    return 0;
+}
+
+long Not_Expression::evaluate(const DataContext* dc) const
+{
+    if(right_member)
+    {
+        return !right_member->evaluate(dc);
     }
     return 0;
 }

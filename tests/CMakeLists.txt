@@ -25,7 +25,8 @@ add_executable(${test_app_name} model/addition.test.cpp
   model/lessthan.test.cpp
   model/greaterthan.test.cpp
   model/andor.test.cpp
-  model/reference.test.cpp)
+  model/reference.test.cpp
+  model/notoperator.test.cpp)
 
 target_link_libraries(${test_app_name} PUBLIC model misc GTest::gtest_main)
 

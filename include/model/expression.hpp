@@ -37,8 +37,25 @@ class Operation_Expression: public Expression
         bool operator <(const Operation_Expression& other){return this->priority < other.priority;}
         bool operator ==(const Operation_Expression& other){return this->priority == other.priority;}
         virtual void add_member(unique_ptr<Expression>&& expr) = 0;
-        virtual bool can_add_member() = 0;
+        virtual bool can_add_member() const = 0;
+        virtual bool has_left_member() const = 0;
         virtual string get_reg_id() const {return id;};
+};
+
+
+class Unary_Operation_Expression: public Operation_Expression
+{
+    protected:
+    unique_ptr<Expression> right_member{nullptr};
+    public:
+        Unary_Operation_Expression(const string& id, int priority=0): Operation_Expression(id, priority){}
+        bool can_add_member() const override {return !right_member;}
+        bool has_left_member() const override {return false;}
+        void add_member(unique_ptr<Expression>&& expr) override {
+            right_member = move(expr);
+        }
+        string to_string() const override {return id +"(" + right_member->to_string() + ")";} 
+
 };
 
 class Binary_Operation_Expression: public Operation_Expression
@@ -48,7 +65,8 @@ class Binary_Operation_Expression: public Operation_Expression
     unique_ptr<Expression> right_member{nullptr};
     public:
         Binary_Operation_Expression(const string& id, int priority=0): Operation_Expression(id, priority){}
-        bool can_add_member() override {return !(left_member && right_member);}
+        bool can_add_member() const override {return !(left_member && right_member);}
+        bool has_left_member() const override {return true;}
         void add_member(unique_ptr<Expression>&& expr) override {
             if(left_member)
             {
@@ -171,5 +189,12 @@ class Reference_Expression: public Expression
     public:
         Reference_Expression(const string& reference):reference(reference){};
         long evaluate(const DataContext* dc) const override;
-        string to_string() const override {return "ref( " + reference +" )";}
+        string to_string() const override {return "ref(" + reference +")";}
+};
+
+class Not_Expression: public Unary_Operation_Expression
+{
+    public:
+        Not_Expression(): Unary_Operation_Expression("!", 3){}
+        long evaluate(const DataContext* dc) const override;
 };
