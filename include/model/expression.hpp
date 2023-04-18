@@ -5,14 +5,14 @@
 #include <memory>
 #include "utils.hpp"
 #include <cmath>
-
+#include "data_context.hpp"
 
 using namespace std;
 
 class Expression
 {
     public:
-        virtual long evaluate() const = 0;
+        virtual long evaluate(const DataContext* dc = nullptr) const = 0;
         virtual string to_string() const = 0;
 };
 
@@ -23,7 +23,7 @@ class Constant_Expression: public Expression
     public:
         Constant_Expression(const string& value): value(value){}
         Constant_Expression(string&& value): value(move(value)){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
         string to_string() const override {return value;}
 };
 
@@ -67,7 +67,7 @@ class Addition_Expression: public Binary_Operation_Expression
 {
     public:
         Addition_Expression(): Binary_Operation_Expression("+"){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
         string get_reg_id() const override {return "\\"+id;}
 };
 
@@ -75,14 +75,14 @@ class Substraction_Expression: public Binary_Operation_Expression
 {
     public:
         Substraction_Expression(): Binary_Operation_Expression("-"){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
 };
 
 class Multiplication_Expression: public Binary_Operation_Expression
 {
     public:
         Multiplication_Expression(): Binary_Operation_Expression("*", 1){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
         string get_reg_id() const override {return "\\"+id;}
 };
 
@@ -90,14 +90,14 @@ class Division_Expression: public Binary_Operation_Expression
 {
     public:
         Division_Expression(): Binary_Operation_Expression("/", 1){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
 };
 
 class Exp_Expression: public Binary_Operation_Expression
 {
     public:
         Exp_Expression(): Binary_Operation_Expression("^", 2){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
         string get_reg_id() const override {return "\\"+id;}
 };
 
@@ -105,61 +105,71 @@ class Modulo_Expression: public Binary_Operation_Expression
 {
     public:
         Modulo_Expression(): Binary_Operation_Expression("%", 1){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
 };
 
 class Equals_Expression: public Binary_Operation_Expression
 {
     public:
         Equals_Expression(): Binary_Operation_Expression("==", -2){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
 };
 
 class NotEquals_Expression: public Binary_Operation_Expression
 {
     public:
         NotEquals_Expression(): Binary_Operation_Expression("!=", -2){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
 };
 
 class LessThan_Expression: public Binary_Operation_Expression
 {
     public:
         LessThan_Expression(): Binary_Operation_Expression("<", -1){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
 };
 
 class LessThanEqual_Expression: public Binary_Operation_Expression
 {
     public:
         LessThanEqual_Expression(): Binary_Operation_Expression("<=", -1){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
 };
 
 class GreaterThan_Expression: public Binary_Operation_Expression
 {
     public:
         GreaterThan_Expression(): Binary_Operation_Expression(">", -1){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
 };
 
 class GreaterThanEqual_Expression: public Binary_Operation_Expression
 {
     public:
         GreaterThanEqual_Expression(): Binary_Operation_Expression(">=", -1){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
 };
 
 class And_Expression: public Binary_Operation_Expression
 {
     public:
         And_Expression(): Binary_Operation_Expression("and", -3){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
 };
 
 class Or_Expression: public Binary_Operation_Expression
 {
     public:
         Or_Expression(): Binary_Operation_Expression("or", -2){}
-        long evaluate() const override;
+        long evaluate(const DataContext* dc) const override;
+};
+
+class Reference_Expression: public Expression
+{
+    private:
+        string reference;
+    public:
+        Reference_Expression(const string& reference):reference(reference){};
+        long evaluate(const DataContext* dc) const override;
+        string to_string() const override {return "ref( " + reference +" )";}
 };

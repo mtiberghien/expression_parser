@@ -1,6 +1,6 @@
 #include "parser.hpp"
 
-Expression_Parser::Expression_Parser(unique_ptr<DataContext> data): data(move(data))
+Expression_Parser::Expression_Parser()
 {
     operation_factory.insert({"+", [](){return make_unique<Addition_Expression>();}});
     operation_factory.insert({"-", [](){return make_unique<Substraction_Expression>();}});
@@ -48,8 +48,6 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
             throw invalid_argument(s.str());
         }
 
-        // Supported operators
-        string supportedOperators = this->getValidOperatorsString();
         vector<string> ops = getSupportedOperatorsReg();
         sort(begin(ops), end(ops), [](const string& s1, const string& s2){return s1.size()>s2.size();});
         stringstream s_ops;
@@ -69,6 +67,8 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
         s_ops << ")";
         string r_ops = s_ops.str();
         string digits = regex_replace(expr, regex(r_ops, regex_constants::icase), "");
+        regex is_ref("\\$\\{\\w+(\\.\\w+){0,}\\}");
+        digits = regex_replace(digits, is_ref, "1");
         auto invalid_it = find_if_not(begin(digits), end(digits), [](const char c){return isdigit(c);});
         if(invalid_it != digits.end())
         {
@@ -86,11 +86,12 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
         tokens.erase(remove_if(begin(tokens),end(tokens), is_whitespace_or_empty), end(tokens));
         if(tokens.size()>1)
         {
-            regex end_with_operation("^[\\d" + supportedOperators+ "]*"+r_ops+"$", regex_constants::icase);
-            regex start_with_operation("^" + r_ops+"[\\d" + supportedOperators+ "]*$", regex_constants::icase);
+            regex end_with_operation("^[\\d" + r_ops+ "]*"+r_ops+"$", regex_constants::icase);
+            regex start_with_operation("^" + r_ops+"[\\d" + r_ops+ "]*$", regex_constants::icase);
             bool check_operator = false;
-            for(const auto& word: tokens)
+            for(auto& word: tokens)
             {
+                word = regex_replace(word, is_ref, "1");
                 if(check_operator && !regex_match(word, start_with_operation))
                 {
                     throw invalid_argument("Two expressions should be separated by an operator");
@@ -107,18 +108,6 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
     }
 
     return result;
-}
-
-string Expression_Parser::getValidOperatorsString()
-{
-    ostringstream s;
-    s << "()";
-    for(const auto& p: operation_factory)
-    {
-        s << p.first;
-    }
-
-    return s.str();
 }
 
 vector<string> Expression_Parser::getSupportedOperators()
@@ -157,10 +146,10 @@ char safe_to_lower(char c)
     return static_cast<char>(tolower(static_cast<unsigned char>(c)));
 }
 
-bool Expression_Parser::is_operation_id(vector<string>& supported_operators, istringstream& stream, string& first_char)
+bool Expression_Parser::is_operation_id(vector<string>& supported_operators, istringstream& stream, string& id)
 {
     vector<string> match_ops;
-    copy_if(begin(supported_operators), end(supported_operators), back_insert_iterator(match_ops), [&first_char](const string& id){return safe_to_lower(id[0])==safe_to_lower(first_char[0]);});
+    copy_if(begin(supported_operators), end(supported_operators), back_insert_iterator(match_ops), [&id](const string& op_id){return safe_to_lower(op_id[0])==safe_to_lower(id[0]);});
     //No match means not an operator
     if(match_ops.size()==0)
     {
@@ -177,7 +166,7 @@ bool Expression_Parser::is_operation_id(vector<string>& supported_operators, ist
         else
         {
             stringstream ids;
-            ids << safe_to_lower(first_char[0]);
+            ids << safe_to_lower(id[0]);
             int i=1;
             for(i;i<id_size;i++)
             {
@@ -185,10 +174,10 @@ bool Expression_Parser::is_operation_id(vector<string>& supported_operators, ist
                 stream.get(c);
                 ids << safe_to_lower(c);
             }
-            string id = ids.str();
-            if(id == match_ops[0])
+            string complete_id = ids.str();
+            if(complete_id == match_ops[0])
             {
-                first_char = id;
+                id = complete_id;
                 return true;
             }
             else
@@ -201,7 +190,7 @@ bool Expression_Parser::is_operation_id(vector<string>& supported_operators, ist
     // If more than one match we should find the unique match looking to following characters
     int offset=1;
     stringstream ids;
-    ids << first_char;
+    ids << id;
     do
     {
         char c;
@@ -211,7 +200,7 @@ bool Expression_Parser::is_operation_id(vector<string>& supported_operators, ist
         int n = count_if(begin(match_ops), end(match_ops), [&ids, offset](const string& s){ return s.substr(0,offset) == ids.str();});
         if(n >= 1)
         {
-            first_char = ids.str();
+            id = ids.str();
             if(n==1)
             {
                 return true;
@@ -227,6 +216,29 @@ bool Expression_Parser::is_operation_id(vector<string>& supported_operators, ist
     } while (true);
     
     return false;
+}
+
+bool is_reference_id(istringstream& s, string& id)
+{
+    if(id[0]=='$')
+    {
+        ostringstream ref;
+        char c;
+        s.get(c);
+        do
+        {
+            s.get(c);
+            if(c!='}')
+            {
+                ref << c;
+            }
+
+        } while (c!='}');
+        id = ref.str();
+        return true;
+    }
+    return false;
+
 }
 
 const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
@@ -245,6 +257,7 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
             if(isspace(c)) continue;
             // Return if end of group
             if(c==')')break;
+            string id{c};
             // Parse recursively if start of group
             if(c=='(')
             {
@@ -263,7 +276,11 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
                 // When a group is parsed we just need to read the next character
                 continue;
             }
-            string id{c};
+            else if(is_reference_id(s, id))
+            {
+                member = make_unique<Reference_Expression>(id);
+                continue;
+            }
             // Check if the character is an operator or the first character of an operator
             // Note that the id will contain the full id of the operation if succeed
             if(is_operation_id(supportedOperators, s, id))

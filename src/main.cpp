@@ -7,7 +7,7 @@ using namespace std;
 
 int main()
 {
-    Expression_Parser parser;
+/*     Expression_Parser parser;
     cout << "Mathematical expression parser" << endl;
     cout << "Supported operators: ";
     vector<string> ops = parser.getSupportedOperators();
@@ -32,5 +32,10 @@ int main()
                 cout << "Invalid expression: " << parse_result.error_message << endl;
             }
         }
-    }
+    } */
+
+    regex r("(\\d+|\\$\\{\\w+(\\.\\w+){0,}\\})");
+    string test="1+4 > ${myVariable.test} + 3";
+    test = regex_replace(test, r, "<var>");
+    cout << "test:" << test << endl;
 }
