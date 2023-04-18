@@ -1,7 +1,7 @@
 #include "parser.hpp"
 #include <iostream>
 #include <iterator>
-
+#include <random>
 
 using namespace std;
 
@@ -34,8 +34,19 @@ int main()
         }
     } */
 
-    regex r("(\\d+|\\$\\{\\w+(\\.\\w+){0,}\\})");
-    string test="1+4 > ${myVariable.test} + 3";
-    test = regex_replace(test, r, "<var>");
-    cout << "test:" << test << endl;
+    Expression_Parser parser;
+    MemoryDataContext mdc;
+    mt19937 mt;
+    uniform_int_distribution<int> dist(0,1);
+    Parse_Result p_result = parser.parse("${presence} == 1");
+    if(p_result)
+    {
+        int index = 0;
+        while(index++ < 10)
+        {
+            mdc.add_or_set("presence", dist(mt));
+            cout << boolalpha;
+            cout << "Présence détectée: " << (bool)p_result.expression->evaluate(&mdc) << endl;
+        }
+    }
 }
