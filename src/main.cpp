@@ -7,13 +7,21 @@ using namespace std;
 
 int main()
 {
-/*     Expression_Parser parser;
+    Expression_Parser parser;
     cout << "Mathematical expression parser" << endl;
     cout << "Supported operators: ";
     vector<string> ops = parser.getSupportedOperators();
     for_each(begin(ops), end(ops), [i=0,size=ops.size()](const string& s) mutable {cout << s << (++i < size ? ", " : "\n");});
     cout << "Group separators: ()" << endl;
     string expression;
+    MemoryDataContext dc;
+    dc.add_or_set("var_1", 5);
+    dc.add_or_set("var_2", 3);
+    cout << "List of references:" << endl;
+    for(pair<string,long> p: (map<string, long>)dc)
+    {
+        cout << p.first << ": " << p.second << endl;
+    }
     while(expression!="q")
     {
         cout << "Your expression ('q' to quit): ";
@@ -23,7 +31,7 @@ int main()
             auto parse_result = parser.parse(expression);
             if(parse_result)
             {
-                long result = parse_result.expression->evaluate();
+                long result = parse_result.expression->evaluate(&dc);
                 cout << parse_result.expression->to_string() << endl;
                 cout << expression << " = " << result << endl;
             }
@@ -31,22 +39,6 @@ int main()
             {
                 cout << "Invalid expression: " << parse_result.error_message << endl;
             }
-        }
-    } */
-
-    Expression_Parser parser;
-    MemoryDataContext mdc;
-    mt19937 mt;
-    uniform_int_distribution<int> dist(0,1);
-    Parse_Result p_result = parser.parse("${presence} == 1");
-    if(p_result)
-    {
-        int index = 0;
-        while(index++ < 10)
-        {
-            mdc.add_or_set("presence", dist(mt));
-            cout << boolalpha;
-            cout << "Présence détectée: " << (bool)p_result.expression->evaluate(&mdc) << endl;
         }
     }
 }

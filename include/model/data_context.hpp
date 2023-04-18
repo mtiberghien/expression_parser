@@ -24,4 +24,5 @@ class MemoryDataContext: public DataContext
         {
             values[reference] = value;
         }
+        operator map<string,long>() const {return values;}
 };
