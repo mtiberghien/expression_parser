@@ -151,3 +151,36 @@ long Not_Expression::evaluate(const DataContext* dc) const
     }
     return 0;
 }
+
+long Shift_Left_Expression::evaluate(const DataContext* dc) const
+{
+    if(left_member && right_member)
+    {
+        return left_member->evaluate(dc) << right_member->evaluate(dc);
+    }
+    return 0;
+}
+
+long Shift_Right_Expression::evaluate(const DataContext* dc) const
+{
+    if(left_member && right_member)
+    {
+        return left_member->evaluate(dc) >> right_member->evaluate(dc);
+    }
+    return 0;
+}
+
+long Max_Function_Expression::evaluate(const DataContext* dc) const
+{
+    if(args.size() >= 2)
+    {
+       long arg1 = args[0]->evaluate();
+       long arg2 = args[1]->evaluate();
+       return max(arg1, arg2); 
+    }
+    else if(args.size() == 1)
+    {
+        return args[1]->evaluate();
+    }
+    return 0;
+}

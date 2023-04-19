@@ -17,6 +17,8 @@ Expression_Parser::Expression_Parser()
     operation_factory.insert({"and", [](){return make_unique<And_Expression>();}});
     operation_factory.insert({"or", [](){return make_unique<Or_Expression>();}});
     operation_factory.insert({"!", [](){return make_unique<Not_Expression>();}});
+    operation_factory.insert({"<<", [](){return make_unique<Shift_Left_Expression>();}});
+    operation_factory.insert({">>", [](){return make_unique<Shift_Right_Expression>();}});
 }
 
 void add_member(unique_ptr<Operation_Expression>& expr, unique_ptr<Expression>& member, bool is_left_member)

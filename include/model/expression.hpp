@@ -6,6 +6,7 @@
 #include "utils.hpp"
 #include <cmath>
 #include "data_context.hpp"
+#include <vector>
 
 using namespace std;
 
@@ -129,56 +130,56 @@ class Modulo_Expression: public Binary_Operation_Expression
 class Equals_Expression: public Binary_Operation_Expression
 {
     public:
-        Equals_Expression(): Binary_Operation_Expression("==", -2){}
+        Equals_Expression(): Binary_Operation_Expression("==", -3){}
         long evaluate(const DataContext* dc) const override;
 };
 
 class NotEquals_Expression: public Binary_Operation_Expression
 {
     public:
-        NotEquals_Expression(): Binary_Operation_Expression("!=", -2){}
+        NotEquals_Expression(): Binary_Operation_Expression("!=", -3){}
         long evaluate(const DataContext* dc) const override;
 };
 
 class LessThan_Expression: public Binary_Operation_Expression
 {
     public:
-        LessThan_Expression(): Binary_Operation_Expression("<", -1){}
+        LessThan_Expression(): Binary_Operation_Expression("<", -2){}
         long evaluate(const DataContext* dc) const override;
 };
 
 class LessThanEqual_Expression: public Binary_Operation_Expression
 {
     public:
-        LessThanEqual_Expression(): Binary_Operation_Expression("<=", -1){}
+        LessThanEqual_Expression(): Binary_Operation_Expression("<=", -2){}
         long evaluate(const DataContext* dc) const override;
 };
 
 class GreaterThan_Expression: public Binary_Operation_Expression
 {
     public:
-        GreaterThan_Expression(): Binary_Operation_Expression(">", -1){}
+        GreaterThan_Expression(): Binary_Operation_Expression(">", -2){}
         long evaluate(const DataContext* dc) const override;
 };
 
 class GreaterThanEqual_Expression: public Binary_Operation_Expression
 {
     public:
-        GreaterThanEqual_Expression(): Binary_Operation_Expression(">=", -1){}
+        GreaterThanEqual_Expression(): Binary_Operation_Expression(">=", -2){}
         long evaluate(const DataContext* dc) const override;
 };
 
 class And_Expression: public Binary_Operation_Expression
 {
     public:
-        And_Expression(): Binary_Operation_Expression("and", -3){}
+        And_Expression(): Binary_Operation_Expression("and", -4){}
         long evaluate(const DataContext* dc) const override;
 };
 
 class Or_Expression: public Binary_Operation_Expression
 {
     public:
-        Or_Expression(): Binary_Operation_Expression("or", -2){}
+        Or_Expression(): Binary_Operation_Expression("or", -3){}
         long evaluate(const DataContext* dc) const override;
 };
 
@@ -197,4 +198,56 @@ class Not_Expression: public Unary_Operation_Expression
     public:
         Not_Expression(): Unary_Operation_Expression("!", 3){}
         long evaluate(const DataContext* dc) const override;
+};
+
+class Shift_Left_Expression: public Binary_Operation_Expression
+{
+    public:
+        Shift_Left_Expression(): Binary_Operation_Expression("<<", -1){}
+        long evaluate(const DataContext* dc) const override;
+};
+
+class Shift_Right_Expression: public Binary_Operation_Expression
+{
+    public:
+        Shift_Right_Expression(): Binary_Operation_Expression(">>", -1){}
+        long evaluate(const DataContext* dc) const override;
+};
+
+class Function_Expression: public Expression
+{
+    protected:
+        string id;
+        uint8_t nb_args{0};
+        vector<unique_ptr<Expression>> args;
+        bool can_add_arg() const {return static_cast<uint8_t>(args.size()) < nb_args;}
+    public:
+        Function_Expression(const string& id, uint8_t nb_args): id(id), nb_args(nb_args){};
+        uint8_t getNbArgs() const {return nb_args;}
+        void add_arg(unique_ptr<Expression>&& expr){
+            if(can_add_arg())
+            {
+                args.push_back(move(expr));
+            }
+        }
+
+        string to_string() const override 
+        { 
+            ostringstream s;
+            s << id << "(";
+            for(const auto &arg: args)
+            {
+                s << arg->to_string();
+            }
+            s << ")";
+            return s.str();
+        }
+};
+
+class Max_Function_Expression: public Function_Expression
+{
+    public:
+        Max_Function_Expression(): Function_Expression("max", 2){}
+        long evaluate(const DataContext* dc) const override;
+
 };
