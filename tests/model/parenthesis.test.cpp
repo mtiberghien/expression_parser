@@ -57,6 +57,17 @@ TEST(parenthesis, parse_par_par_3_plus_1_par_mult_par_5_minus_2_par_par)
     EXPECT_EQ(((3+1)*(5-2)), result.expression->evaluate());
 }
 
+TEST(parenthesis, parse_empty_minus_minus_3)
+{
+    Expression_Parser parser;
+    EXPECT_EQ(-(-3), parser.parse("-(-3)").expression->evaluate());
+}
+
+TEST(parenthesis, parse_3_div_par_4_mult_par_5_plus_1)
+{
+    Expression_Parser parser;
+    EXPECT_EQ((3/(4*5))+1, parser.parse("(3/(4*5))+1").expression->evaluate());
+}
 
 
 

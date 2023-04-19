@@ -54,3 +54,15 @@ TEST(addition, parse_const_3_plus_empty_plus_4)
     Expression_Parser parser;
     EXPECT_EQ(3+4, parser.parse("3+ + 4").expression->evaluate()); 
 }
+
+TEST(addition, parse_const_empty_plus_3_plus_4)
+{
+    Expression_Parser parser;
+    EXPECT_EQ(3+4, parser.parse("+3+4").expression->evaluate()); 
+}
+
+TEST(addition, parse_const_3_plus_4_plus_empty)
+{
+    Expression_Parser parser;
+    EXPECT_EQ(3+4, parser.parse("3+4+").expression->evaluate());
+}

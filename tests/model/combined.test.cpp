@@ -55,3 +55,16 @@ TEST(combined, parse_2_plus_4_less_10_minus_2_equal_5_less_8)
     EXPECT_EQ(2+4<10-2==5<8, parser.parse("2+4<10-2==5<8").expression->evaluate());
 }
 
+TEST(combined, parse_3_plus_5_div_4)
+{
+    Expression_Parser parser;
+    EXPECT_EQ(3+5/4, parser.parse("3+5/4").expression->evaluate());
+}
+
+TEST(combined, parse_empty_div_3_plus_5_div_4)
+{
+    Expression_Parser parser;
+    EXPECT_EQ(0/3+5/4, parser.parse("/3+5/4").expression->evaluate());
+}
+
+

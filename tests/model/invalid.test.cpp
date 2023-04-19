@@ -46,7 +46,7 @@ TEST(invalid, 1_equ_1)
 TEST(invalid, wrong_refer)
 {
     Expression_Parser parser;
-    string wrong_refs[]= {"${}", "${a b}", "${test", "${a..b}"};
+    string wrong_refs[]= {"${}", "${a b}", "${test", "${a..b}, $a b}"};
     for(const auto& s: wrong_refs)
     {
         EXPECT_FALSE(parser.parse(s));
