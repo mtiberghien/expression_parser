@@ -53,3 +53,15 @@ TEST(invalid, wrong_refer)
     }
     
 }
+
+TEST(invalid, closing_parenthesis_without_opening)
+{
+    Expression_Parser parser;
+    EXPECT_FALSE(parser.parse(")4("));
+}
+
+TEST(invalid, closing_parenthesis_without_opening_2)
+{
+    Expression_Parser parser;
+    EXPECT_FALSE(parser.parse("(3+1)+)5("));
+}
