@@ -174,8 +174,8 @@ long Max_Function_Expression::evaluate(const DataContext* dc) const
 {
     if(args.size() >= 2)
     {
-       long arg1 = args[0]->evaluate();
-       long arg2 = args[1]->evaluate();
+       long arg1 = args[0]->evaluate(dc);
+       long arg2 = args[1]->evaluate(dc);
        return max(arg1, arg2); 
     }
     else if(args.size() == 1)

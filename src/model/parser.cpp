@@ -19,6 +19,8 @@ Expression_Parser::Expression_Parser()
     operation_factory.insert({"!", [](){return make_unique<Not_Expression>();}});
     operation_factory.insert({"<<", [](){return make_unique<Shift_Left_Expression>();}});
     operation_factory.insert({">>", [](){return make_unique<Shift_Right_Expression>();}});
+
+    function_factory.insert({"max", [](){return make_unique<Max_Function_Expression>();}});
 }
 
 void add_member(unique_ptr<Operation_Expression>& expr, unique_ptr<Expression>& member, bool is_left_member)
@@ -33,7 +35,51 @@ void add_member(unique_ptr<Operation_Expression>& expr, unique_ptr<Expression>& 
     }
 }
 
-const Validation_Result Expression_Parser::validate(const string& expr) noexcept
+string Expression_Parser::get_ops_regex_string(const string& expr) const
+{
+    vector<string> ops = getSupportedOperatorsReg();
+    sort(begin(ops), end(ops), [](const string& s1, const string& s2){return s1.size()>s2.size();});
+    stringstream s_ops;
+    s_ops << "(\\s|\\(|\\)";
+    if(ops.size()>0)
+    {
+        s_ops << "|";
+    }
+    for(int i=0;i<ops.size();i++)
+    {
+        s_ops << ops[i];
+        if(i<ops.size()-1)
+        {
+            s_ops << "|";
+        }
+    }
+    s_ops << ")";
+
+    return s_ops.str();
+
+}
+
+string Expression_Parser::get_func_regex_string(const string& expr) const
+{
+    vector<string> funcs = getSupportedFunctions();
+    sort(begin(funcs), end(funcs), [](const string& s1, const string& s2){return s1.size()>s2.size();});
+    stringstream s_func;
+    s_func << "(";
+    for(int i=0;i<funcs.size();i++)
+    {
+        s_func << funcs[i];
+        if(i<funcs.size()-1)
+        {
+            s_func << "|";
+        }
+    }
+    s_func << ")\\(";
+
+    return s_func.str();
+
+}
+
+const Validation_Result Expression_Parser::validate(const string& expr) const noexcept
 {
     Validation_Result result;
     try
@@ -71,27 +117,11 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
             nb_close_parenthesis--;
         }
 
-
-
-        vector<string> ops = getSupportedOperatorsReg();
-        sort(begin(ops), end(ops), [](const string& s1, const string& s2){return s1.size()>s2.size();});
-        stringstream s_ops;
-        s_ops << "(\\s|\\(|\\)";
-        if(ops.size()>0)
-        {
-            s_ops << "|";
-        }
-        for(int i=0;i<ops.size();i++)
-        {
-            s_ops << ops[i];
-            if(i<ops.size()-1)
-            {
-                s_ops << "|";
-            }
-        }
-        s_ops << ")";
-        string r_ops = s_ops.str();
-        string digits = regex_replace(expr, regex(r_ops, regex_constants::icase), "");
+        string r_ops = get_ops_regex_string(expr);
+        string r_func = get_func_regex_string(expr);
+        string expr_without_funcs = regex_replace(expr, regex(r_func, regex_constants::icase), "");
+        expr_without_funcs = regex_replace(expr_without_funcs, regex(","), "+");
+        string digits = regex_replace(expr_without_funcs, regex(r_ops, regex_constants::icase), "");
         regex is_ref("\\$\\{\\w+(\\.\\w+){0,}\\}");
         digits = regex_replace(digits, is_ref, "1");
         auto invalid_it = find_if_not(begin(digits), end(digits), [](const char c){return isdigit(c);});
@@ -106,7 +136,7 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
         stringstream splitters;
         splitters << "[\\s()]+";
         regex re(splitters.str());
-        sregex_token_iterator first{expr.begin(), expr.end(), re, -1}, last;
+        sregex_token_iterator first{expr_without_funcs.begin(), expr_without_funcs.end(), re, -1}, last;
         vector<std::string> tokens{first, last};
         tokens.erase(remove_if(begin(tokens),end(tokens), is_whitespace_or_empty), end(tokens));
         if(tokens.size()>1)
@@ -135,7 +165,7 @@ const Validation_Result Expression_Parser::validate(const string& expr) noexcept
     return result;
 }
 
-vector<string> Expression_Parser::getSupportedOperators()
+vector<string> Expression_Parser::getSupportedOperators() const
 {
     vector<string> result;
     for(const auto&p: operation_factory)
@@ -145,7 +175,17 @@ vector<string> Expression_Parser::getSupportedOperators()
     return result;
 }
 
-vector<string> Expression_Parser::getSupportedOperatorsReg()
+vector<string> Expression_Parser::getSupportedFunctions() const
+{
+    vector<string> result;
+    for(const auto&p: function_factory)
+    {
+        result.push_back(p.first);
+    }
+    return result;
+}
+
+vector<string> Expression_Parser::getSupportedOperatorsReg() const
 {
     vector<string> result;
     for(const auto&p: operation_factory)
@@ -171,19 +211,19 @@ char safe_to_lower(char c)
     return static_cast<char>(tolower(static_cast<unsigned char>(c)));
 }
 
-bool Expression_Parser::is_operation_id(vector<string>& supported_operators, istringstream& stream, string& id)
+bool Expression_Parser::is_id(vector<string>& supported_ids, istringstream& stream, string& id) const
 {
-    vector<string> match_ops;
-    copy_if(begin(supported_operators), end(supported_operators), back_insert_iterator(match_ops), [&id](const string& op_id){return safe_to_lower(op_id[0])==safe_to_lower(id[0]);});
+    vector<string> match_ids;
+    copy_if(begin(supported_ids), end(supported_ids), back_insert_iterator(match_ids), [&id](const string& known_id){return safe_to_lower(known_id[0])==safe_to_lower(id[0]);});
     //No match means not an operator
-    if(match_ops.size()==0)
+    if(match_ids.size()==0)
     {
         return false;
     }
     // If only one match and size is one return true othewise check if following chars are matching with the id
-    if(match_ops.size() == 1)
+    if(match_ids.size() == 1)
     {
-        int id_size = match_ops[0].size();
+        int id_size = match_ids[0].size();
         if(id_size == 1)
         {
             return true;
@@ -200,7 +240,7 @@ bool Expression_Parser::is_operation_id(vector<string>& supported_operators, ist
                 ids << safe_to_lower(c);
             }
             string complete_id = ids.str();
-            if(complete_id == match_ops[0])
+            if(complete_id == match_ids[0])
             {
                 id = complete_id;
                 return true;
@@ -222,7 +262,7 @@ bool Expression_Parser::is_operation_id(vector<string>& supported_operators, ist
         stream.get(c);
         ids << c;
         offset++;
-        int n = count_if(begin(match_ops), end(match_ops), [&ids, offset](const string& s){ return s.substr(0,offset) == ids.str();});
+        int n = count_if(begin(match_ids), end(match_ids), [&ids, offset](const string& s){ return s.substr(0,offset) == ids.str();});
         if(n >= 1)
         {
             id = ids.str();
@@ -266,7 +306,34 @@ bool is_reference_id(istringstream& s, string& id)
 
 }
 
-const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
+Parse_Result Expression_Parser::build_function(const string& id, istringstream& s) const
+{
+    char c;
+    // First parenthesis;
+    s.get(c);
+    Parse_Result result;
+    auto function = function_factory.at(id)();
+    int nb_args = function->getNbArgs();
+    while(nb_args>0)
+    {
+        auto p = parse(s);
+        if(p)
+        {
+            function->add_arg(move(p.expression));
+            nb_args--;
+        }
+        else
+        {
+            result.error_message = p.error_message;
+            return result;
+        }
+        
+    }
+    result.expression = move(function);
+    return result;
+}
+
+const Parse_Result Expression_Parser::parse(istringstream& s) const noexcept
 {
     Parse_Result result;
     ostringstream word{""s};
@@ -274,14 +341,15 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
     unique_ptr<Expression> member{nullptr};
     stack<unique_ptr<Operation_Expression>> ops;
     vector<string> supportedOperators = getSupportedOperators();
+    vector<string> supportedFunctions = getSupportedFunctions();
     char c;
     try
     {
         while(s.get(c))
         {
             if(isspace(c)) continue;
-            // Return if end of group
-            if(c==')')break;
+            // Return if end of group of end of function argument
+            if(c==')' || c==',')break;
             string id{c};
             // Parse recursively if start of group
             if(c=='(')
@@ -306,9 +374,22 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
                 member = make_unique<Reference_Expression>(id);
                 continue;
             }
+            else if(is_id(supportedFunctions, s, id))
+            {
+                auto p = build_function(id, s);
+                if(p)
+                {
+                    member = move(p.expression);
+                }
+                else
+                {
+                    result.error_message = p.error_message;
+                    return result;
+                }
+            }
             // Check if the character is an operator or the first character of an operator
             // Note that the id will contain the full id of the operation if succeed
-            if(is_operation_id(supportedOperators, s, id))
+            if(is_id(supportedOperators, s, id))
             {
                 // If member is not defined make member as constant expression
                 string constant = word.str();
@@ -319,7 +400,7 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
                 // Word is cleared
                 word.str("");
                 //Create the operation expression according to the id
-                current = operation_factory[id]();
+                current = build_operation(id);
                 //If there is another operation in the stack
                 if(!ops.empty())
                 {
@@ -393,7 +474,7 @@ const Parse_Result Expression_Parser::parse(istringstream& s) noexcept
     return result;
 }
 
-const Parse_Result Expression_Parser::parse(const string& expression_string) noexcept
+const Parse_Result Expression_Parser::parse(const string& expression_string) const noexcept
 {
     Validation_Result validation = validate(expression_string);
     Parse_Result result;

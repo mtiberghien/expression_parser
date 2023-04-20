@@ -31,12 +31,19 @@ class Expression_Parser
 {
     private:
         map<string, function<unique_ptr<Operation_Expression>()>> operation_factory;
-        const Validation_Result validate(const string& expression) noexcept;
-        bool is_operation_id(vector<string>& supported_operators, istringstream& stream, string& first_char);
-        const Parse_Result parse(istringstream& stream) noexcept;
-        vector<string> getSupportedOperatorsReg();
+        map<string, function<unique_ptr<Function_Expression>()>> function_factory;
+        const Validation_Result validate(const string& expression) const noexcept;
+        bool is_id(vector<string>& supported_operators, istringstream& stream, string& first_char) const;
+        const Parse_Result parse(istringstream& stream) const noexcept;
+        vector<string> getSupportedOperatorsReg() const;
+        string get_ops_regex_string(const string& expr) const;
+        string get_func_regex_string(const string& expr) const;
+        unique_ptr<Operation_Expression> build_operation(const string& id) const {return operation_factory.at(id)();}
+        Parse_Result build_function(const string& id, istringstream& s) const;
+        Parse_Result add_function_members(unique_ptr<Function_Expression>& function, istringstream& s) const noexcept;
     public:
         Expression_Parser();
-        vector<string> getSupportedOperators();
-        const Parse_Result parse(const string& expression_string) noexcept;
+        vector<string> getSupportedOperators() const;
+        vector<string> getSupportedFunctions() const;
+        const Parse_Result parse(const string& expression_string) const noexcept;
 };

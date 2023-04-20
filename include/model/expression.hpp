@@ -235,9 +235,13 @@ class Function_Expression: public Expression
         { 
             ostringstream s;
             s << id << "(";
-            for(const auto &arg: args)
+            for(int i=0;i<args.size();i++)
             {
-                s << arg->to_string();
+                s << args[i]->to_string();
+                if(i<args.size()-1)
+                {
+                    s << ",";
+                }
             }
             s << ")";
             return s.str();
