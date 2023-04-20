@@ -12,6 +12,9 @@ int main()
     cout << "Supported operators: ";
     vector<string> ops = parser.getSupportedOperators();
     for_each(begin(ops), end(ops), [i=0,size=ops.size()](const string& s) mutable {cout << s << (++i < size ? ", " : "\n");});
+    cout << "Supported functions: ";
+    vector<string> funcs = parser.getSupportedFunctions();
+    for_each(begin(funcs), end(funcs), [i=0,size=funcs.size()](const string& s) mutable {cout << s << (++i < size ? ", " : "\n");});
     cout << "Group separators: ()" << endl;
     string expression;
     MemoryDataContext dc;

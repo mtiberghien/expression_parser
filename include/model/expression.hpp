@@ -255,3 +255,11 @@ class Max_Function_Expression: public Function_Expression
         long evaluate(const DataContext* dc) const override;
 
 };
+
+class Min_Function_Expression: public Function_Expression
+{
+    public:
+        Min_Function_Expression(): Function_Expression("min", 2){}
+        long evaluate(const DataContext* dc) const override;
+
+};

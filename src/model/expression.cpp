@@ -180,7 +180,22 @@ long Max_Function_Expression::evaluate(const DataContext* dc) const
     }
     else if(args.size() == 1)
     {
-        return args[1]->evaluate();
+        return args[1]->evaluate(dc);
+    }
+    return 0;
+}
+
+long Min_Function_Expression::evaluate(const DataContext* dc) const
+{
+    if(args.size() >= 2)
+    {
+       long arg1 = args[0]->evaluate(dc);
+       long arg2 = args[1]->evaluate(dc);
+       return min(arg1, arg2); 
+    }
+    else if(args.size() == 1)
+    {
+        return args[1]->evaluate(dc);
     }
     return 0;
 }

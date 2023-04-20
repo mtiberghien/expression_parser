@@ -21,6 +21,7 @@ Expression_Parser::Expression_Parser()
     operation_factory.insert({">>", [](){return make_unique<Shift_Right_Expression>();}});
 
     function_factory.insert({"max", [](){return make_unique<Max_Function_Expression>();}});
+    function_factory.insert({"min", [](){return make_unique<Min_Function_Expression>();}});
 }
 
 void add_member(unique_ptr<Operation_Expression>& expr, unique_ptr<Expression>& member, bool is_left_member)
@@ -120,7 +121,7 @@ const Validation_Result Expression_Parser::validate(const string& expr) const no
         string r_ops = get_ops_regex_string(expr);
         string r_func = get_func_regex_string(expr);
         string expr_without_funcs = regex_replace(expr, regex(r_func, regex_constants::icase), "");
-        expr_without_funcs = regex_replace(expr_without_funcs, regex(","), "+");
+        expr_without_funcs = regex_replace(expr_without_funcs, regex(","), " + ");
         string digits = regex_replace(expr_without_funcs, regex(r_ops, regex_constants::icase), "");
         regex is_ref("\\$\\{\\w+(\\.\\w+){0,}\\}");
         digits = regex_replace(digits, is_ref, "1");
@@ -262,13 +263,30 @@ bool Expression_Parser::is_id(vector<string>& supported_ids, istringstream& stre
         stream.get(c);
         ids << c;
         offset++;
-        int n = count_if(begin(match_ids), end(match_ids), [&ids, offset](const string& s){ return s.substr(0,offset) == ids.str();});
+        string match_id;
+        int n = count_if(begin(match_ids), end(match_ids), [&match_id, &ids, offset](const string& s){ 
+            bool result = s.substr(0,offset) == ids.str();
+            if(result)
+            {
+                match_id = s;
+            }
+            return result;
+        });
         if(n >= 1)
         {
-            id = ids.str();
             if(n==1)
             {
+                id = match_id;
+                while(offset< match_id.size())
+                {
+                    stream.get(c);
+                    offset++;
+                }
                 return true;
+            }
+            else
+            {
+                id = ids.str();
             }
            
         }
