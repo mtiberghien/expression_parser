@@ -1,6 +1,9 @@
 #pragma once
 
 #include "expression.hpp"
+#include "expr_mathematical.hpp"
+#include "expr_logical.hpp"
+#include "expr_functions.hpp"
 #include <string>
 #include <stack>
 #include <sstream>
@@ -39,11 +42,11 @@ class Expression_Parser
         string get_ops_regex_string(const string& expr) const;
         string get_func_regex_string(const string& expr) const;
         unique_ptr<Operation_Expression> build_operation(const string& id) const {return operation_factory.at(id)();}
-        Parse_Result build_function(const string& id, istringstream& s) const;
-        Parse_Result add_function_members(unique_ptr<Function_Expression>& function, istringstream& s) const noexcept;
+        Parse_Result build_function(const string& id, istringstream& s) const noexcept;
     public:
         Expression_Parser();
         vector<string> getSupportedOperators() const;
         vector<string> getSupportedFunctions() const;
         const Parse_Result parse(const string& expression_string) const noexcept;
+        bool add_customFunction(const string& id, const string& expresssion);
 };

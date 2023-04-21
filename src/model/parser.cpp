@@ -7,7 +7,6 @@ Expression_Parser::Expression_Parser()
     operation_factory.insert({"*", [](){return make_unique<Multiplication_Expression>();}});
     operation_factory.insert({"/", [](){return make_unique<Division_Expression>();}});
     operation_factory.insert({"%", [](){return make_unique<Modulo_Expression>();}});
-    operation_factory.insert({"^", [](){return make_unique<Exp_Expression>();}});
     operation_factory.insert({"==", [](){return make_unique<Equals_Expression>();}});
     operation_factory.insert({"<", [](){return make_unique<LessThan_Expression>();}});
     operation_factory.insert({"<=", [](){return make_unique<LessThanEqual_Expression>();}});
@@ -17,11 +16,16 @@ Expression_Parser::Expression_Parser()
     operation_factory.insert({"and", [](){return make_unique<And_Expression>();}});
     operation_factory.insert({"or", [](){return make_unique<Or_Expression>();}});
     operation_factory.insert({"!", [](){return make_unique<Not_Expression>();}});
+    operation_factory.insert({"^", [](){return make_unique<XOR_Bitwise_Expression>();}});
+    operation_factory.insert({"&", [](){return make_unique<And_Bitwise_Expression>();}});
+    operation_factory.insert({"|", [](){return make_unique<Or_Bitwise_Expression>();}});
     operation_factory.insert({"<<", [](){return make_unique<Shift_Left_Expression>();}});
     operation_factory.insert({">>", [](){return make_unique<Shift_Right_Expression>();}});
 
     function_factory.insert({"max", [](){return make_unique<Max_Function_Expression>();}});
     function_factory.insert({"min", [](){return make_unique<Min_Function_Expression>();}});
+    function_factory.insert({"pow", [](){return make_unique<Pow_Function_Expression>();}});
+    function_factory.insert({"sqrt", [](){return make_unique<Sqrt_Function_Expression>();}});
 }
 
 void add_member(unique_ptr<Operation_Expression>& expr, unique_ptr<Expression>& member, bool is_left_member)
@@ -324,14 +328,46 @@ bool is_reference_id(istringstream& s, string& id)
 
 }
 
-Parse_Result Expression_Parser::build_function(const string& id, istringstream& s) const
+Parse_Result Expression_Parser::build_function(const string& id, istringstream& s) const noexcept
 {
     char c;
     // First parenthesis;
-    s.get(c);
+    int opening_count = 0;
+    int read_chars = 0;
+    int nb_args =0;
+    do
+    {
+        s.get(c);
+        read_chars++;
+        if(isspace(c))
+        {
+            continue;
+        }
+        if(c=='(')
+        {
+            opening_count++;
+            if(opening_count==1)
+            {
+                read_chars=0;
+            }
+        }
+        else if(c==')')
+        {
+            opening_count--;
+        }
+        else if(opening_count == 1 && c==',')
+        {
+            nb_args++;
+        }
+        else if(nb_args==0)
+        {
+            nb_args++;
+        }
+    } while (opening_count>0 && !s.eof());
+    s.seekg(-(read_chars), ios_base::cur);
+    
     Parse_Result result;
     auto function = function_factory.at(id)();
-    int nb_args = function->getNbArgs();
     while(nb_args>0)
     {
         auto p = parse(s);
@@ -398,6 +434,7 @@ const Parse_Result Expression_Parser::parse(istringstream& s) const noexcept
                 if(p)
                 {
                     member = move(p.expression);
+                    continue;
                 }
                 else
                 {
@@ -490,6 +527,21 @@ const Parse_Result Expression_Parser::parse(istringstream& s) const noexcept
         result.expression = move(member);
     }
     return result;
+}
+
+bool Expression_Parser::add_customFunction(const string& id, const string& expression)
+{
+    auto p = this->parse(expression);
+    if(p)
+    {
+        function_factory.insert({id, [id, expression,this](){
+            auto p = this->parse(expression);
+            return make_unique<Custom_Function_Expression>(id, move(p.expression));}});
+        return true;
+    }
+
+
+    return false;
 }
 
 const Parse_Result Expression_Parser::parse(const string& expression_string) const noexcept

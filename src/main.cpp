@@ -17,6 +17,16 @@ int main()
     for_each(begin(funcs), end(funcs), [i=0,size=funcs.size()](const string& s) mutable {cout << s << (++i < size ? ", " : "\n");});
     cout << "Group separators: ()" << endl;
     string expression;
+    vector<pair<string,string>> custom_functions{{"is_even","${1}%2==0"},{"is_odd","${1}%2==1"},{"sum", "${1} + ${2}"}};
+    cout << "Custom Functions:" << endl;
+    for(const auto&p: custom_functions)
+    {
+        if(parser.add_customFunction(p.first, p.second))
+        {
+            cout << p.first << ": " << p.second << endl;
+        }
+    }
+    
     MemoryDataContext dc;
     dc.add_or_set("var_1", 5);
     dc.add_or_set("var_2", 3);
