@@ -17,7 +17,7 @@ int main()
     for_each(begin(funcs), end(funcs), [i=0,size=funcs.size()](const string& s) mutable {cout << s << (++i < size ? ", " : "\n");});
     cout << "Group separators: ()" << endl;
     string expression;
-    vector<pair<string,string>> custom_functions{{"is_even","${1}%2==0"},{"is_odd","${1}%2==1"},{"sum", "${1} + ${2}"}};
+    vector<pair<string,string>> custom_functions{{"is_even","${1}%2==0"},{"is_odd","!is_even(${1})"},{"sum", "${1} + ${2}"},{"oussam","${1}*${1}*${1}"}};
     cout << "Custom Functions:" << endl;
     for(const auto&p: custom_functions)
     {

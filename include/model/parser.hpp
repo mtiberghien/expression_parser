@@ -35,10 +35,10 @@ class Expression_Parser
     private:
         map<string, function<unique_ptr<Operation_Expression>()>> operation_factory;
         map<string, function<unique_ptr<Function_Expression>()>> function_factory;
-        const Validation_Result validate(const string& expression) const noexcept;
+        //const Validation_Result validate(const string& expression) const noexcept;
         bool is_id(vector<string>& supported_operators, istringstream& stream, string& first_char) const;
         const Parse_Result parse(istringstream& stream) const noexcept;
-        vector<string> getSupportedOperatorsReg() const;
+        
         string get_ops_regex_string(const string& expr) const;
         string get_func_regex_string(const string& expr) const;
         unique_ptr<Operation_Expression> build_operation(const string& id) const {return operation_factory.at(id)();}
@@ -47,6 +47,7 @@ class Expression_Parser
         Expression_Parser();
         vector<string> getSupportedOperators() const;
         vector<string> getSupportedFunctions() const;
+        vector<string> getSupportedOperatorsReg() const;
         const Parse_Result parse(const string& expression_string) const noexcept;
         bool add_customFunction(const string& id, const string& expresssion);
 };

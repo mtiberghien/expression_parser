@@ -84,7 +84,7 @@ string Expression_Parser::get_func_regex_string(const string& expr) const
 
 }
 
-const Validation_Result Expression_Parser::validate(const string& expr) const noexcept
+/* const Validation_Result Expression_Parser::validate(const string& expr) const noexcept
 {
     Validation_Result result;
     try
@@ -168,7 +168,7 @@ const Validation_Result Expression_Parser::validate(const string& expr) const no
     }
 
     return result;
-}
+} */
 
 vector<string> Expression_Parser::getSupportedOperators() const
 {
