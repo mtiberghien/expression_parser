@@ -26,6 +26,13 @@ Expression_Parser::Expression_Parser()
     function_factory.insert({"min", [](){return make_unique<Min_Function_Expression>();}});
     function_factory.insert({"pow", [](){return make_unique<Pow_Function_Expression>();}});
     function_factory.insert({"sqrt", [](){return make_unique<Sqrt_Function_Expression>();}});
+
+    validator = make_unique<EmptyValidationHandler>();
+    auto v2 = make_unique<ParenthesisValidationHandler>();
+    auto v3 = make_unique<ExpressionValidationHandler>(*this);
+    v2->set_next(move(v3));
+    validator->set_next(move(v2));
+    
 }
 
 void add_member(unique_ptr<Operation_Expression>& expr, unique_ptr<Expression>& member, bool is_left_member)
@@ -84,90 +91,53 @@ string Expression_Parser::get_func_regex_string(const string& expr) const
 
 }
 
+Validation_Result ExpressionValidationHandler::validate(const string& expr) const noexcept
+{
+    string r_ops = parser.get_ops_regex_string(expr);
+    string r_func = parser.get_func_regex_string(expr);
+    string expr_without_funcs = regex_replace(expr, regex(r_func, regex_constants::icase), "");
+    expr_without_funcs = regex_replace(expr_without_funcs, regex(","), " + ");
+    string digits = regex_replace(expr_without_funcs, regex(r_ops, regex_constants::icase), "");
+    regex is_ref("\\$\\{\\w+(\\.\\w+){0,}\\}");
+    digits = regex_replace(digits, is_ref, "1");
+    auto invalid_it = find_if_not(begin(digits), end(digits), [](const char c){return isdigit(c);});
+    if(invalid_it != digits.end())
+    {
+        ostringstream message;
+        message << "The following operator is not supported:  '" << *invalid_it << "'";
+        return Validation_Result{false,message.str()};
+    }
+
+    // Expression should be separated by operators
+    stringstream splitters;
+    splitters << "[\\s()]+";
+    regex re(splitters.str());
+    sregex_token_iterator first{expr_without_funcs.begin(), expr_without_funcs.end(), re, -1}, last;
+    vector<std::string> tokens{first, last};
+    tokens.erase(remove_if(begin(tokens),end(tokens), is_whitespace_or_empty), end(tokens));
+    if(tokens.size()>1)
+    {
+        regex end_with_operation("^[\\d" + r_ops+ "]*"+r_ops+"$", regex_constants::icase);
+        regex start_with_operation("^" + r_ops+"[\\d" + r_ops+ "]*$", regex_constants::icase);
+        bool check_operator = false;
+        for(auto& word: tokens)
+        {
+            word = regex_replace(word, is_ref, "1");
+            if(check_operator && !regex_match(word, start_with_operation))
+            {
+                return Validation_Result{false,"Two expressions should be separated by an operator"};
+            }
+            check_operator = !regex_match(word, end_with_operation);
+        }
+        
+    }
+
+    return validate_next(expr);
+}
+
 Validation_Result Expression_Parser::validate(const string& expr) const noexcept
 {
-    Validation_Result result;
-    try
-    {
-        // Empty or white space
-        if(is_whitespace_or_empty(expr))
-        {
-            throw invalid_argument("Expression should not be empty");
-        }
-
-        // Unbalanced parenthesis
-        int nb_open_parenthesis = count_if(begin(expr), end(expr), [](const char c){return c == '(';});
-        int nb_close_parenthesis = count_if(begin(expr), end(expr), [](const char c){return c == ')';});
-        if(nb_open_parenthesis != nb_close_parenthesis)
-        {
-            ostringstream s;
-            s << "The number of opening parenthesis (" << nb_open_parenthesis << ") is not equal to the number of closing parenthesis (" << nb_close_parenthesis << ")";
-            throw invalid_argument(s.str());
-        }
-
-        
-        int openingIndex = -1;
-        string substr = expr;
-        while(nb_close_parenthesis > 0)
-        {
-            auto closing_it=substr.begin();
-            int last_closing_index = substr.find_last_of(')');
-            advance(closing_it, last_closing_index);
-            nb_open_parenthesis = count(substr.begin(),closing_it,'(');
-            if (nb_open_parenthesis<nb_close_parenthesis)
-            {
-                throw invalid_argument("The closing parenthesis cannot be before the opening parenthesis");
-            }
-            substr = substr.substr(0,last_closing_index);
-            nb_close_parenthesis--;
-        }
-
-        string r_ops = get_ops_regex_string(expr);
-        string r_func = get_func_regex_string(expr);
-        string expr_without_funcs = regex_replace(expr, regex(r_func, regex_constants::icase), "");
-        expr_without_funcs = regex_replace(expr_without_funcs, regex(","), " + ");
-        string digits = regex_replace(expr_without_funcs, regex(r_ops, regex_constants::icase), "");
-        regex is_ref("\\$\\{\\w+(\\.\\w+){0,}\\}");
-        digits = regex_replace(digits, is_ref, "1");
-        auto invalid_it = find_if_not(begin(digits), end(digits), [](const char c){return isdigit(c);});
-        if(invalid_it != digits.end())
-        {
-            ostringstream message;
-            message << "The following operator is not supported:  '" << *invalid_it << "'";
-            throw invalid_argument(message.str());
-        }
-
-        // Expression should be separated by operators
-        stringstream splitters;
-        splitters << "[\\s()]+";
-        regex re(splitters.str());
-        sregex_token_iterator first{expr_without_funcs.begin(), expr_without_funcs.end(), re, -1}, last;
-        vector<std::string> tokens{first, last};
-        tokens.erase(remove_if(begin(tokens),end(tokens), is_whitespace_or_empty), end(tokens));
-        if(tokens.size()>1)
-        {
-            regex end_with_operation("^[\\d" + r_ops+ "]*"+r_ops+"$", regex_constants::icase);
-            regex start_with_operation("^" + r_ops+"[\\d" + r_ops+ "]*$", regex_constants::icase);
-            bool check_operator = false;
-            for(auto& word: tokens)
-            {
-                word = regex_replace(word, is_ref, "1");
-                if(check_operator && !regex_match(word, start_with_operation))
-                {
-                    throw invalid_argument("Two expressions should be separated by an operator");
-                }
-                check_operator = !regex_match(word, end_with_operation);
-            }
-            
-        }
-    }
-    catch(const std::exception& e)
-    {
-        result.message = e.what();
-        result.is_valid = false;
-    }
-
-    return result;
+    return validator->validate(expr);
 }
 
 vector<string> Expression_Parser::getSupportedOperators() const

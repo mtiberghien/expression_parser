@@ -13,15 +13,9 @@
 #include <regex>
 #include <iostream>
 #include <queue>
+#include "validation_handler.hpp"
 
 using namespace std;
-
-struct Validation_Result
-{
-    bool is_valid{true};
-    string message{""};
-    operator bool() const {return is_valid;}
-};
 
 struct Parse_Result
 {
@@ -43,10 +37,12 @@ class Expression_Parser
         string get_func_regex_string(const string& expr) const;
         unique_ptr<Operation_Expression> build_operation(const string& id) const {return operation_factory.at(id)();}
         Parse_Result build_function(const string& id, istringstream& s) const noexcept;
+        unique_ptr<ValidationHandler> validator;
     public:
         Expression_Parser();
         vector<string> getSupportedOperators() const;
         vector<string> getSupportedFunctions() const;
         Parse_Result parse(const string& expression_string) const noexcept;
         bool add_customFunction(const string& id, const string& expresssion);
+    friend ExpressionValidationHandler;
 };
