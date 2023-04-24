@@ -84,7 +84,7 @@ string Expression_Parser::get_func_regex_string(const string& expr) const
 
 }
 
-const Validation_Result Expression_Parser::validate(const string& expr) const noexcept
+Validation_Result Expression_Parser::validate(const string& expr) const noexcept
 {
     Validation_Result result;
     try
@@ -387,7 +387,7 @@ Parse_Result Expression_Parser::build_function(const string& id, istringstream& 
     return result;
 }
 
-const Parse_Result Expression_Parser::parse(istringstream& s) const noexcept
+Parse_Result Expression_Parser::parse(istringstream& s) const noexcept
 {
     Parse_Result result;
     ostringstream word{""s};
@@ -544,7 +544,7 @@ bool Expression_Parser::add_customFunction(const string& id, const string& expre
     return false;
 }
 
-const Parse_Result Expression_Parser::parse(const string& expression_string) const noexcept
+Parse_Result Expression_Parser::parse(const string& expression_string) const noexcept
 {
     Validation_Result validation = validate(expression_string);
     Parse_Result result;
