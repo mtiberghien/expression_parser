@@ -43,6 +43,6 @@ class Expression_Parser
         vector<string> getSupportedOperators() const;
         vector<string> getSupportedFunctions() const;
         Parse_Result parse(const string& expression_string) const noexcept;
-        bool add_customFunction(const string& id, const string& expresssion);
+        Validation_Result add_customFunction(const string& id, const string& expresssion);
     friend ExpressionValidationHandler;
 };

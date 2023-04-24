@@ -49,6 +49,13 @@ long Custom_Function_Expression::evaluate(const DataContext* dc) const
 {
     MemoryDataContext mdc;
     int i=1;
+    if(dc != nullptr)
+    {
+        for (const auto& k: dc->get_keys())
+        {
+            mdc.add_or_set(k, dc->evaluate(k));
+        }
+    }
     for(const auto& a: args)
     {
         mdc.add_or_set(std::to_string(i++), a->evaluate(dc));

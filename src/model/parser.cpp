@@ -499,7 +499,7 @@ Parse_Result Expression_Parser::parse(istringstream& s) const noexcept
     return result;
 }
 
-bool Expression_Parser::add_customFunction(const string& id, const string& expression)
+Validation_Result Expression_Parser::add_customFunction(const string& id, const string& expression)
 {
     auto p = this->parse(expression);
     if(p)
@@ -507,11 +507,11 @@ bool Expression_Parser::add_customFunction(const string& id, const string& expre
         function_factory.insert({id, [id, expression,this](){
             auto p = this->parse(expression);
             return make_unique<Custom_Function_Expression>(id, move(p.expression));}});
-        return true;
+        return Validation_Result();
     }
 
 
-    return false;
+    return Validation_Result{false, p.error_message};
 }
 
 Parse_Result Expression_Parser::parse(const string& expression_string) const noexcept

@@ -47,3 +47,42 @@ TEST(reference, valid_references)
     
 }
 
+TEST(reference, set_reference)
+{
+    Expression_Parser parser;
+    MemoryDataContext mdc;
+    mdc.add_or_set("var", 0);
+    auto result = parser.parse("${var}");
+    ASSERT_TRUE(result);
+    EXPECT_EQ(0, result.expression->evaluate(&mdc));
+    ASSERT_TRUE(mdc.set("var", 10));
+    EXPECT_EQ(10, result.expression->evaluate(&mdc));
+    
+}
+
+TEST(reference, increase_reference)
+{
+    Expression_Parser parser;
+    MemoryDataContext mdc;
+    mdc.add_or_set("var", 10);
+    auto result = parser.parse("${var}");
+    ASSERT_TRUE(result);
+    EXPECT_EQ(10, result.expression->evaluate(&mdc));
+    ASSERT_TRUE(mdc.increase("var", 1));
+    EXPECT_EQ(11, result.expression->evaluate(&mdc));
+    
+}
+
+TEST(reference, decrease_reference)
+{
+    Expression_Parser parser;
+    MemoryDataContext mdc;
+    mdc.add_or_set("var", 10);
+    auto result = parser.parse("${var}");
+    ASSERT_TRUE(result);
+    EXPECT_EQ(10, result.expression->evaluate(&mdc));
+    ASSERT_TRUE(mdc.decrease("var", 1));
+    EXPECT_EQ(9, result.expression->evaluate(&mdc));
+    
+}
+

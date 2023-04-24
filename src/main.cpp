@@ -17,13 +17,18 @@ int main()
     for_each(begin(funcs), end(funcs), [i=0,size=funcs.size()](const string& s) mutable {cout << s << (++i < size ? ", " : "\n");});
     cout << "Group separators: ()" << endl;
     string expression;
-    vector<pair<string,string>> custom_functions{{"is_even","${1}%2==0"},{"is_odd","!is_even(${1})"},{"sum", "${1} + ${2}"},{"chris","${1}*${1}"}};
+    vector<pair<string,string>> custom_functions{{"is_even","${1}%2==0"},{"is_odd","!is_even(${1})"},{"sum", "${1} + ${2}"},{"add_var_1", "${1} + ${var_1}"}};
     cout << "Custom Functions:" << endl;
     for(const auto&p: custom_functions)
     {
-        if(parser.add_customFunction(p.first, p.second))
+        auto result = parser.add_customFunction(p.first, p.second);
+        if(result)
         {
             cout << p.first << ": " << p.second << endl;
+        }
+        else
+        {
+            cout << "Could not add function '" << p.first << "' : " << result.message << endl;
         }
     }
     
