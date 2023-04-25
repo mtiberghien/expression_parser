@@ -50,6 +50,10 @@ int main()
             if(parse_result)
             {
                 long result = parse_result.expression->evaluate(&dc);
+                if(parse_result.expression->is_updatable())
+                {
+                    parse_result.expression->update(&dc);
+                }
                 cout << parse_result.expression->to_string() << endl;
                 cout << expression << " = " << result << endl;
             }
