@@ -55,3 +55,12 @@ class ExpressionValidationHandler: public ValidationHandler
     ExpressionValidationHandler(const Expression_Parser& parser): parser(parser){};
     Validation_Result validate(const string& expr) const noexcept override;
 };
+
+class AffecationValidationHandler: public ValidationHandler
+{
+    private:
+        const Expression_Parser& parser;
+    public:
+    AffecationValidationHandler(const Expression_Parser& parser): parser(parser){};
+    Validation_Result validate(const string& expr) const noexcept override;
+};

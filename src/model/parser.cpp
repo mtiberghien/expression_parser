@@ -21,6 +21,9 @@ Expression_Parser::Expression_Parser()
     operation_factory.insert({"|", [](){return make_unique<Or_Bitwise_Expression>();}});
     operation_factory.insert({"<<", [](){return make_unique<Shift_Left_Expression>();}});
     operation_factory.insert({">>", [](){return make_unique<Shift_Right_Expression>();}});
+    operation_factory.insert({"=", [](){return make_unique<Set_Expression>();}});
+    operation_factory.insert({"+=", [](){return make_unique<Increase_Expression>();}});
+    operation_factory.insert({"-=", [](){return make_unique<Decrease_Expression>();}});
 
     function_factory.insert({"max", [](){return make_unique<Max_Function_Expression>();}});
     function_factory.insert({"min", [](){return make_unique<Min_Function_Expression>();}});
@@ -30,6 +33,8 @@ Expression_Parser::Expression_Parser()
     validator = make_unique<EmptyValidationHandler>();
     auto v2 = make_unique<ParenthesisValidationHandler>();
     auto v3 = make_unique<ExpressionValidationHandler>(*this);
+    auto v4 = make_unique<AffecationValidationHandler>(*this);
+    v3->set_next(move(v4));
     v2->set_next(move(v3));
     validator->set_next(move(v2));
     
@@ -130,6 +135,61 @@ Validation_Result ExpressionValidationHandler::validate(const string& expr) cons
             check_operator = !regex_match(word, end_with_operation);
         }
         
+    }
+
+    return validate_next(expr);
+}
+
+Validation_Result AffecationValidationHandler::validate(const string& expr) const noexcept
+{
+    vector<string> supported_ops = parser.getSupportedOperators();
+    sort(supported_ops.begin(), supported_ops.end(), greater());
+    ostringstream s_updatable;
+    ostringstream s_others;
+    s_updatable << "(";
+    s_others << "(";
+    int i_updatable = 0;
+    int i_others = 0;
+    for(const string& op_id: supported_ops)
+    {
+        auto op = parser.operation_factory.at(op_id)();
+        if(op->is_updatable())
+        {
+            if(i_updatable++>0)
+            {
+                s_updatable << "|";
+            }
+            s_updatable << op->get_reg_id();
+        }
+        else
+        {
+            if(i_others++>0)
+            {
+                s_others <<"|";
+            }
+            s_others << op->get_reg_id();
+        }
+    }
+    s_updatable << ")";
+    s_others << ")";
+    string r_up_string = s_updatable.str();
+    string r_ot_string = s_others.str();
+    string expr_bis = regex_replace(expr, regex(r_ot_string), "");
+    regex r_ops(r_up_string);
+    int nb_affectation_ops = distance(sregex_iterator(expr_bis.begin(), expr_bis.end(), r_ops),sregex_iterator());
+    if(nb_affectation_ops >= 1)
+    {
+        if(nb_affectation_ops > 1)
+        {
+            return Validation_Result{false, "Only one affectation operator is allowed"};
+        }
+        regex is_ref("(\\$\\{\\w+(\\.\\w+){0,}\\})");
+        expr_bis = regex_replace(expr_bis, is_ref, "");
+        regex is_left_member_ref("^\\s*"+r_up_string+".*$");
+        if(!regex_match(expr_bis, is_left_member_ref))
+        {
+            return Validation_Result{false, "Affectation left member should be a reference"};
+        };
     }
 
     return validate_next(expr);

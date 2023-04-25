@@ -4,6 +4,7 @@
 #include "expr_mathematical.hpp"
 #include "expr_logical.hpp"
 #include "expr_functions.hpp"
+#include "expr_affectation.hpp"
 #include <string>
 #include <stack>
 #include <sstream>
@@ -45,4 +46,5 @@ class Expression_Parser
         Parse_Result parse(const string& expression_string) const noexcept;
         Validation_Result add_customFunction(const string& id, const string& expresssion);
     friend ExpressionValidationHandler;
+    friend AffecationValidationHandler;
 };

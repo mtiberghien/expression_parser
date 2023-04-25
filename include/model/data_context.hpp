@@ -36,7 +36,14 @@ class MemoryDataContext: public DataContext
     public:
         bool exists(const string& reference) const noexcept override { return values.find(reference)!= values.end();}
         long evaluate(const string& reference) const noexcept override {return values.at(reference);}
-        virtual bool set(const string& reference, long value) noexcept override { if(exists(reference)){values[reference]=value; return true;} return false;}
+        virtual bool set(const string& reference, long value) noexcept override 
+        { 
+            if(exists(reference))
+            {
+                values[reference]=value;
+                return true;
+            }
+            return false;}
         virtual bool increase(const string& reference, long increase_value) noexcept override { if(exists(reference)){values[reference]+=increase_value; return true;} return false;}
         virtual bool decrease(const string& reference, long increase_value) noexcept override { if(exists(reference)){values[reference]-=increase_value; return true;} return false;}
         vector<string> get_keys() const noexcept override{

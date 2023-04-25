@@ -15,6 +15,8 @@ class Expression
 {
     public:
         virtual long evaluate(const DataContext* dc = nullptr) const = 0;
+        virtual bool update(DataContext* dc=nullptr){return false;}
+        virtual bool is_updatable() const {return false;}
         virtual string to_string() const = 0;
 };
 
@@ -90,6 +92,30 @@ class Reference_Expression: public Expression
     public:
         Reference_Expression(const string& reference):reference(reference){};
         long evaluate(const DataContext* dc) const override;
+        bool set(DataContext* dc, long value)
+        {
+            if(dc)
+            {
+                return dc->set(reference, value);
+            }
+            return false;
+        }
+        bool increase(DataContext* dc, long value)
+        {
+            if(dc)
+            {
+                return dc->increase(reference, value);
+            }
+            return false;
+        }
+        bool decrease(DataContext* dc, long value)
+        {
+            if(dc)
+            {
+                return dc->decrease(reference, value);
+            }
+            return false;
+        }
         string to_string() const override {return "ref(" + reference +")";}
 };
 

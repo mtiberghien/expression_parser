@@ -29,7 +29,8 @@ add_executable(${test_app_name} model/addition.test.cpp
   model/notoperator.test.cpp
   model/shift.test.cpp
   model/functions.test.cpp
-  model/bitwise_logical.test.cpp)
+  model/bitwise_logical.test.cpp
+  model/affectation.test.cpp)
 
 target_link_libraries(${test_app_name} PUBLIC model misc GTest::gtest_main)
 

@@ -4,6 +4,7 @@ add_library(model STATIC
     expr_mathematical.cpp
     expr_logical.cpp
     expr_functions.cpp
-    validation_handler.cpp)
+    validation_handler.cpp
+    expr_affectation.cpp)
 
 target_include_directories(model PUBLIC ${PROJECT_SOURCE_DIR}/include/model  ${PROJECT_SOURCE_DIR}/include/misc)

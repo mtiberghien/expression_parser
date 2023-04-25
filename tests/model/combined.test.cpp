@@ -70,7 +70,7 @@ TEST(combined, parse_empty_div_3_plus_5_div_4)
     Expression_Parser parser;
     auto result = parser.parse("/3+5/4");
     ASSERT_TRUE(result);
-    EXPECT_EQ(0/3+5/4, parser.parse("/3+5/4").expression->evaluate());
+    EXPECT_EQ(0/3+5/4, result.expression->evaluate());
 }
 
 TEST(combined, parse_1_plus_2_xor_3_minus_5_mult_7_equals_8_or_9)
@@ -78,7 +78,7 @@ TEST(combined, parse_1_plus_2_xor_3_minus_5_mult_7_equals_8_or_9)
     Expression_Parser parser;
     auto result = parser.parse("/3+5/4");
     ASSERT_TRUE(result);
-    EXPECT_EQ(1+2^3-5*7==8||9, parser.parse("1+2^3-5*7==8 or 9").expression->evaluate());
+    EXPECT_EQ(1+2^3-5*7==8||9, result.expression->evaluate());
 }
 
 
